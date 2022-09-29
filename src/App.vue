@@ -30,13 +30,14 @@ import AppFooter from './AppFooter.vue';
 const route = useRoute();
 const emit = defineEmits(['change-theme'])
 const globalProps = inject('globalProperties');
+const appState = globalProps.$appState;
 
 let layoutMode = 'static';
 let staticMenuInactive = false;
 let overlayMenuActive = false;
 let mobileMenuActive = false;
-let menuClick = false;
-let menuActive = true;
+let menuClick;
+let menuActive;
 const menu = [
   {
     label: 'Home',
@@ -172,7 +173,7 @@ const containerClass = computed(() => {
 
 });
 const logo = computed(() => {
-  return ($appState.darkTheme) ? "images/logo-white.svg" : "images/logo.svg";
+  return (appState.darkTheme) ? "images/logo-white.svg" : "images/logo.svg";
 });
 
 function onWrapperClick() {

@@ -41,9 +41,10 @@ import { computed, inject } from 'vue';
 
 const emit = defineEmits(['menu-toggle', 'topbar-menu-toggle']);
 const globalProps = inject('globalProperties');
+const appState = globalProps.$appState;
 
 const darkTheme = computed(() =>  {
-  return $appState.darkTheme;
+  return appState.darkTheme;
 })
 
 function onMenuToggle(event) {
@@ -55,7 +56,6 @@ function onTopbarMenuToggle(event) {
 }
 
 function topbarImage() {
-  const appState = this.globalProps.$appState;
   return appState.darkTheme ? 'images/logo-white.svg' : 'images/logo-dark.svg';
 }
 </script>
