@@ -113,7 +113,7 @@ app.config.globalProperties.$appState = reactive({
   theme: "lara-light-indigo",
   darkTheme: false,
 });
-// app.provide('globalProperties', app.config.globalProperties);
+app.provide('globalProperties', app.config.globalProperties);
 
 app.use(PrimeVue, { ripple: true, inputStyle: "outlined" });
 app.use(ConfirmationService);

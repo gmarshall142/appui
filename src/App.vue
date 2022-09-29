@@ -20,10 +20,8 @@
 </template>
 
 <script setup>
-// import { RouterLink, RouterView } from 'vue-router'
-// import HelloWorld from "./components/HelloWorld.vue";
 import { useRoute } from 'vue-router';
-import { computed, watch, onBeforeUpdate } from "vue";
+import { computed, inject, watch, onBeforeUpdate } from "vue";
 import AppTopBar from './AppTopbar.vue';
 import AppMenu from './AppMenu.vue';
 import AppConfig from './AppConfig.vue';
@@ -31,6 +29,8 @@ import AppFooter from './AppFooter.vue';
 
 const route = useRoute();
 const emit = defineEmits(['change-theme'])
+const globalProps = inject('globalProperties');
+
 let layoutMode = 'static';
 let staticMenuInactive = false;
 let overlayMenuActive = false;
@@ -153,20 +153,22 @@ onBeforeUpdate(() => {
     removeClass(document.body, 'body-overflow-hidden');
 });
 watch(() => route.name, () => {
+  const toast = globalProps.$toast;
   menuActive = false;
-  // $toast.removeAllGroups();
+  toast.removeAllGroups();
 });
 
 const containerClass = computed(() => {
+  const primevue = globalProps.$primevue;
   return ['layout-wrapper', {
     'layout-overlay': layoutMode === 'overlay',
     'layout-static': layoutMode === 'static',
     'layout-static-sidebar-inactive': staticMenuInactive && layoutMode === 'static',
     'layout-overlay-sidebar-active': overlayMenuActive && layoutMode === 'overlay',
     'layout-mobile-sidebar-active': mobileMenuActive,
+    'p-input-filled': primevue.config.inputStyle === 'filled',
+    'p-ripple-disabled': primevue.config.ripple === false
   }];
-  // 'p-input-filled': this.$primevue.config.inputStyle === 'filled',
-  //     'p-ripple-disabled': this.$primevue.config.ripple === false
 
 });
 const logo = computed(() => {

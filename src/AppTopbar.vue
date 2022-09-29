@@ -55,8 +55,7 @@ function onTopbarMenuToggle(event) {
 }
 
 function topbarImage() {
-  // const appState = globalProps.$appState;
-  // return appState.darkTheme ? 'images/logo-white.svg' : 'images/logo-dark.svg';
-  return 'images/logo-white.svg';
+  const appState = this.globalProps.$appState;
+  return appState.darkTheme ? 'images/logo-white.svg' : 'images/logo-dark.svg';
 }
 </script>
