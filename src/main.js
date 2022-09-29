@@ -99,7 +99,7 @@ import TriStateCheckbox from "primevue/tristatecheckbox";
 import CodeHighlight from "./AppCodeHighlight";
 import BlockViewer from "./BlockViewer.vue";
 
-import "./assets/main.css";
+// import "./assets/main.css";
 
 router.beforeEach(function (to, from, next) {
   window.scrollTo(0, 0);
