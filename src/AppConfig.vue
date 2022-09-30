@@ -1,5 +1,5 @@
 <template>
-  <div id="layout-config" :class="containerClass">
+  <div id="layout-config" ref="root" :class="containerClass">
     <a href="#" class="layout-config-button" id="layout-config-button" @click="toggleConfigurator">
       <i class="pi pi-cog"></i>
     </a>
@@ -242,117 +242,126 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import EventBus from './AppEventBus';
+import {inject, onMounted, onBeforeUnmount, watch, ref, computed} from "vue";
+import {useRoute} from "vue-router/dist/vue-router";
 
-export default {
-  props: {
-    layoutMode: {
-      type: String,
-      default: null
-    }
-  },
-  data() {
-    return {
-      active: false,
-      d_layoutMode: this.layoutMode,
-      scale: 14,
-      scales: [12,13,14,15,16]
-    }
-  },
-  outsideClickListener: null,
-  themeChangeListener: null,
-  watch: {
-    $route() {
-      if (this.active) {
-        this.active = false;
-        this.unbindOutsideClickListener();
-      }
-    },
-    layoutMode(newValue) {
-      this.d_layoutMode = newValue;
-    }
-  },
-  beforeUnmount() {
-    EventBus.off('theme-change', this.themeChangeListener);
-  },
-  mounted() {
-    this.themeChangeListener = () => {
-      this.applyScale();
-    };
-
-    EventBus.on('theme-change', this.themeChangeListener);
-  },
-  methods: {
-    toggleConfigurator(event) {
-      this.active = !this.active;
-      event.preventDefault();
-
-      if (this.active)
-        this.bindOutsideClickListener();
-      else
-        this.unbindOutsideClickListener();
-    },
-    hideConfigurator(event) {
-      this.active = false;
-      this.unbindOutsideClickListener();
-      event.preventDefault();
-    },
-    changeInputStyle(value) {
-      this.$primevue.config.inputStyle = value;
-    },
-    changeRipple(value) {
-      this.$primevue.config.ripple = value;
-    },
-    changeLayout(event, layoutMode) {
-      this.$emit('layout-change', layoutMode);
-      event.preventDefault();
-    },
-    bindOutsideClickListener() {
-      if (!this.outsideClickListener) {
-        this.outsideClickListener = (event) => {
-          if (this.active && this.isOutsideClicked(event)) {
-            this.active = false;
-          }
-        };
-        document.addEventListener('click', this.outsideClickListener);
-      }
-    },
-    unbindOutsideClickListener() {
-      if (this.outsideClickListener) {
-        document.removeEventListener('click', this.outsideClickListener);
-        this.outsideClickListener = null;
-      }
-    },
-    isOutsideClicked(event) {
-      return !(this.$el.isSameNode(event.target) || this.$el.contains(event.target));
-    },
-    decrementScale() {
-      this.scale--;
-      this.applyScale();
-    },
-    incrementScale() {
-      this.scale++;
-      this.applyScale();
-    },
-    applyScale() {
-      document.documentElement.style.fontSize = this.scale + 'px';
-    },
-    changeTheme(event, theme, dark) {
-      EventBus.emit('theme-change', { theme: theme, dark: dark });
-      event.preventDefault();
-    }
-  },
-  computed: {
-    containerClass() {
-      return ['layout-config', {'layout-config-active': this.active}];
-    },
-    rippleActive() {
-      return this.$primevue.config.ripple;
-    },
-    inputStyle() {
-      return this.$appState.inputStyle;
-    }
+const props = defineProps({
+  layoutMode: {
+    type: String,
+    default: null
   }
+});
+const root = ref(null);
+let activeState = ref(null);
+
+const route = useRoute();
+const emit = defineEmits(['layout-change', 'theme-change']);
+const globalProps = inject('globalProperties');
+const appState = globalProps.$appState;
+const primevue = globalProps.$primevue;
+
+let active = false;
+let d_layoutMode = __props.layoutMode;
+let scale = 14;
+const scales = [12,13,14,15,16];
+let outsideClickListener = null;
+let themeChangeListener = null;
+let el = null;
+
+onMounted(() => {
+  themeChangeListener = () => {
+    applyScale();
+  };
+
+  activeState.value = active;
+  el = root.value.children[0];
+  EventBus.on('theme-change', themeChangeListener);
+});
+onBeforeUnmount(() => {
+  EventBus.off('theme-change', themeChangeListener);
+});
+
+watch(route.name, () => {
+  if(active) {
+    active = false;
+    unbindOutsideClickListener();
+  }
+});
+watch(__props.layoutMode, (newValue) => {
+  d_layoutMode = newValue;
+});
+
+const containerClass = computed(() => {
+  return ['layout-config', {'layout-config-active': activeState.value}];
+});
+const rippleActive = computed(() => {
+  return primevue.config.ripple;
+});
+const inputStyle = computed(() => {
+  return appState.inputStyle;
+});
+
+function toggleConfigurator(event) {
+  active = !active;
+  activeState.value = active;
+  event.preventDefault();
+
+  if(active)
+    bindOutsideClickListener();
+  else
+    unbindOutsideClickListener();
+}
+function hideConfigurator(event) {
+  active = false;
+  activeState.value = active;
+  unbindOutsideClickListener();
+  event.preventDefault();
+}
+function changeInputStyle(value) {
+  primevue.config.inputStyle = value;
+}
+function changeRipple(value) {
+  primevue.config.ripple = value;
+}
+function changeLayout(event, layoutMode) {
+  emit('layout-change', layoutMode);
+  event.preventDefault();
+}
+function bindOutsideClickListener() {
+  if(!outsideClickListener) {
+    outsideClickListener = (event) => {
+      if(active && isOutsideClicked(event)) {
+        active = false;
+        activeState.value = active;
+      }
+    };
+    document.addEventListener('click', outsideClickListener);
+  }
+}
+function unbindOutsideClickListener() {
+  if(outsideClickListener) {
+    document.removeEventListener('click', outsideClickListener);
+    outsideClickListener = null;
+  }
+}
+function isOutsideClicked(event) {
+  return !(el.isSameNode(event.target) || el.contains(event.target));
+}
+function decrementScale() {
+  scale--;
+  applyScale();
+}
+function incrementScale() {
+  scale++;
+  applyScale();
+}
+function applyScale() {
+  document.documentElement.style.fontSize = scale + 'px';
+}
+function changeTheme(event, theme, dark) {
+  EventBus.emit('theme-change', { theme: theme, dark: dark });
+  event.preventDefault();
 }
 </script>

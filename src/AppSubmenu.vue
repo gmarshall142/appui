@@ -66,8 +66,6 @@ function onMenuItemClick(event, item, index) {
 }
 
 function visible(item) {
-  console.log(`item: ${JSON.stringify(item)}`);
-  // console.log(`item.visible: ${typeof item.visible}  item.visible: ${item.visible}`);
   return (typeof item.visible === 'function' ? item.visible() : item.visible !== false);
 }
 </script>
