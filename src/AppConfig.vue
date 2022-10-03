@@ -264,7 +264,8 @@ const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
 const primevue = globalProps.$primevue;
 
-let d_layoutMode = __props.layoutMode;
+// let d_layoutMode = props.layoutMode;
+let d_layoutMode = 'static';
 let scale = 14;
 const scales = [12,13,14,15,16];
 let outsideClickListener = null;
@@ -283,13 +284,14 @@ onBeforeUnmount(() => {
   EventBus.off('theme-change', themeChangeListener);
 });
 
-watch(route.name, () => {
+watch(() => route.name, () => {
   if(state.active) {
     state.active = false;
     unbindOutsideClickListener();
   }
 });
-watch(__props.layoutMode, (newValue) => {
+watch(() => __props.layoutMode, (newValue) => {
+  console.log(`***** d_layoutMode changing to ${newValue}`);
   d_layoutMode = newValue;
 });
 
@@ -323,10 +325,13 @@ function changeInputStyle(value) {
 function changeRipple(value) {
   primevue.config.ripple = value;
 }
-function changeLayout(event, layoutMode) {
-  emit('layout-change', layoutMode);
+
+function changeLayout(event, mode) {
+  console.log(`changeLayout mode = ${mode}`)
+  emit('layout-change', mode);
   event.preventDefault();
 }
+
 function bindOutsideClickListener() {
   if(!outsideClickListener) {
     outsideClickListener = (event) => {

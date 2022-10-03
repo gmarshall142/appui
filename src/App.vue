@@ -226,6 +226,7 @@ function onMenuItemClick(event) {
 }
 
 function onLayoutChange(mode) {
+  console.log(`***** layoutMode changing to ${mode}`);
   state.layoutMode = mode;
 }
 
