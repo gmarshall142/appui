@@ -244,7 +244,7 @@
 
 <script setup>
 import EventBus from './AppEventBus';
-import {inject, onMounted, onBeforeUnmount, watch, ref, computed} from "vue";
+import {inject, onMounted, onBeforeUnmount, watch, ref, reactive, computed} from "vue";
 import {useRoute} from "vue-router/dist/vue-router";
 
 const props = defineProps({
@@ -254,7 +254,9 @@ const props = defineProps({
   }
 });
 const root = ref(null);
-let activeState = ref(null);
+const state = reactive({
+  active: false
+})
 
 const route = useRoute();
 const emit = defineEmits(['layout-change', 'theme-change']);
@@ -262,7 +264,6 @@ const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
 const primevue = globalProps.$primevue;
 
-let active = false;
 let d_layoutMode = __props.layoutMode;
 let scale = 14;
 const scales = [12,13,14,15,16];
@@ -275,7 +276,6 @@ onMounted(() => {
     applyScale();
   };
 
-  activeState.value = active;
   el = root.value.children[0];
   EventBus.on('theme-change', themeChangeListener);
 });
@@ -284,8 +284,8 @@ onBeforeUnmount(() => {
 });
 
 watch(route.name, () => {
-  if(active) {
-    active = false;
+  if(state.active) {
+    state.active = false;
     unbindOutsideClickListener();
   }
 });
@@ -294,7 +294,7 @@ watch(__props.layoutMode, (newValue) => {
 });
 
 const containerClass = computed(() => {
-  return ['layout-config', {'layout-config-active': activeState.value}];
+  return ['layout-config', {'layout-config-active': state.active}];
 });
 const rippleActive = computed(() => {
   return primevue.config.ripple;
@@ -304,18 +304,16 @@ const inputStyle = computed(() => {
 });
 
 function toggleConfigurator(event) {
-  active = !active;
-  activeState.value = active;
+  state.active = !state.active;
   event.preventDefault();
 
-  if(active)
+  if(state.active)
     bindOutsideClickListener();
   else
     unbindOutsideClickListener();
 }
 function hideConfigurator(event) {
-  active = false;
-  activeState.value = active;
+  state.active = false;
   unbindOutsideClickListener();
   event.preventDefault();
 }
@@ -332,9 +330,8 @@ function changeLayout(event, layoutMode) {
 function bindOutsideClickListener() {
   if(!outsideClickListener) {
     outsideClickListener = (event) => {
-      if(active && isOutsideClicked(event)) {
-        active = false;
-        activeState.value = active;
+      if(state.active && isOutsideClicked(event)) {
+        state.active = false;
       }
     };
     document.addEventListener('click', outsideClickListener);

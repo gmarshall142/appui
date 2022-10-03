@@ -12,16 +12,16 @@
       <AppFooter />
     </div>
 
-    <AppConfig :layoutMode="layoutMode" @layout-change="onLayoutChange" />
+    <AppConfig :layoutMode="state.layoutMode" @layout-change="onLayoutChange" />
     <transition name="layout-mask">
-      <div class="layout-mask p-component-overlay" v-if="mobileMenuActive"></div>
+      <div class="layout-mask p-component-overlay" v-if="state.mobileMenuActive"></div>
     </transition>
   </div>
 </template>
 
 <script setup>
 import { useRoute } from 'vue-router';
-import { computed, inject, watch, onBeforeUpdate } from "vue";
+import { computed, inject, watch, onBeforeUpdate, reactive } from "vue";
 import AppTopBar from './AppTopbar.vue';
 import AppMenu from './AppMenu.vue';
 import AppConfig from './AppConfig.vue';
@@ -32,12 +32,15 @@ const emit = defineEmits(['change-theme'])
 const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
 
-let layoutMode = 'static';
-let staticMenuInactive = false;
-let overlayMenuActive = false;
-let mobileMenuActive = false;
+let state = reactive({
+  layoutMode: 'static',
+  staticMenuInactive: false,
+  overlayMenuActive: false,
+  mobileMenuActive: false
+});
+
 let menuClick;
-let menuActive;
+let menuActive = true;
 const menu = [
   {
     label: 'Home',
@@ -148,11 +151,12 @@ const menu = [
 ];
 
 onBeforeUpdate(() => {
-  if (mobileMenuActive)
+  if (state.mobileMenuActive)
     addClass(document.body, 'body-overflow-hidden');
   else
     removeClass(document.body, 'body-overflow-hidden');
 });
+
 watch(() => route.name, () => {
   const toast = globalProps.$toast;
   menuActive = false;
@@ -161,12 +165,16 @@ watch(() => route.name, () => {
 
 const containerClass = computed(() => {
   const primevue = globalProps.$primevue;
+  console.log(`layoutMode: ${state.layoutMode}`);
+  console.log(`static-sidebar-inactive: ${state.staticMenuInactive && state.layoutMode === 'static'}`);
+  console.log(`overlay-sidebar-active: ${state.overlayMenuActive && state.layoutMode === 'overlay'}`);
+  console.log(`mobile-sidebar-active: ${state.mobileMenuActive}`);
   return ['layout-wrapper', {
-    'layout-overlay': layoutMode === 'overlay',
-    'layout-static': layoutMode === 'static',
-    'layout-static-sidebar-inactive': staticMenuInactive && layoutMode === 'static',
-    'layout-overlay-sidebar-active': overlayMenuActive && layoutMode === 'overlay',
-    'layout-mobile-sidebar-active': mobileMenuActive,
+    'layout-overlay': state.layoutMode === 'overlay',
+    'layout-static': state.layoutMode === 'static',
+    'layout-static-sidebar-inactive': state.staticMenuInactive && state.layoutMode === 'static',
+    'layout-overlay-sidebar-active': state.overlayMenuActive && state.layoutMode === 'overlay',
+    'layout-mobile-sidebar-active': state.mobileMenuActive,
     'p-input-filled': primevue.config.inputStyle === 'filled',
     'p-ripple-disabled': primevue.config.ripple === false
   }];
@@ -178,8 +186,8 @@ const logo = computed(() => {
 
 function onWrapperClick() {
   if (!menuClick) {
-    overlayMenuActive = false;
-    mobileMenuActive = false;
+    state.overlayMenuActive = false;
+    state.mobileMenuActive = false;
   }
 
   menuClick = false;
@@ -189,18 +197,18 @@ function onMenuToggle() {
   menuClick = true;
 
   if (isDesktop()) {
-    if (layoutMode === 'overlay') {
-      if (mobileMenuActive === true) {
-        overlayMenuActive = true;
+    if (state.layoutMode === 'overlay') {
+      if (state.mobileMenuActive === true) {
+        state.overlayMenuActive = true;
       }
 
-      overlayMenuActive = !this.overlayMenuActive;
-      mobileMenuActive = false;
-    } else if (layoutMode === 'static') {
-      staticMenuInactive = !staticMenuInactive;
+      state.overlayMenuActive = !state.overlayMenuActive;
+      state.mobileMenuActive = false;
+    } else if (state.layoutMode === 'static') {
+      state.staticMenuInactive = !state.staticMenuInactive;
     }
   } else {
-    mobileMenuActive = !mobileMenuActive;
+    state.mobileMenuActive = !state.mobileMenuActive;
   }
 
   event.preventDefault();
@@ -212,27 +220,29 @@ function onSidebarClick() {
 
 function onMenuItemClick(event) {
   if (event.item && !event.item.items) {
-    overlayMenuActive = false;
-    mobileMenuActive = false;
+    state.overlayMenuActive = false;
+    state.mobileMenuActive = false;
   }
 }
 
 function onLayoutChange(mode) {
-  layoutMode = mode;
+  state.layoutMode = mode;
 }
 
 function addClass(element, className) {
-  if (element.classList)
+  if (element.classList) {
     element.classList.add(className);
-  else
+  } else {
     element.className += ' ' + className;
+  }
 }
 
 function removeClass(element, className) {
-  if (element.classList)
+  if (element.classList) {
     element.classList.remove(className);
-  else
+  } else {
     element.className = element.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+  }
 }
 
 function isDesktop() {
@@ -241,10 +251,10 @@ function isDesktop() {
 
 function isSidebarVisible() {
   if (isDesktop()) {
-    if (layoutMode === 'static')
-      return !staticMenuInactive;
-    else if (layoutMode === 'overlay')
-      return overlayMenuActive;
+    if (state.layoutMode === 'static')
+      return !state.staticMenuInactive;
+    else if (state.layoutMode === 'overlay')
+      return state.overlayMenuActive;
   }
   return true;
 }
