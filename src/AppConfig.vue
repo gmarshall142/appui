@@ -290,7 +290,6 @@ watch(() => route.name, () => {
   }
 });
 watch(() => __props.layoutMode, (newValue) => {
-  console.log(`***** d_layoutMode changing to ${newValue}`);
   d_layoutMode = newValue;
 });
 
@@ -326,7 +325,6 @@ function changeRipple(value) {
 }
 
 function changeLayout(event, mode) {
-  console.log(`changeLayout mode = ${mode}`)
   emit('layout-change', mode);
   event.preventDefault();
 }

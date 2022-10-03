@@ -165,10 +165,6 @@ watch(() => route.name, () => {
 
 const containerClass = computed(() => {
   const primevue = globalProps.$primevue;
-  console.log(`layoutMode: ${state.layoutMode}`);
-  console.log(`static-sidebar-inactive: ${state.staticMenuInactive && state.layoutMode === 'static'}`);
-  console.log(`overlay-sidebar-active: ${state.overlayMenuActive && state.layoutMode === 'overlay'}`);
-  console.log(`mobile-sidebar-active: ${state.mobileMenuActive}`);
   return ['layout-wrapper', {
     'layout-overlay': state.layoutMode === 'overlay',
     'layout-static': state.layoutMode === 'static',
@@ -226,7 +222,6 @@ function onMenuItemClick(event) {
 }
 
 function onLayoutChange(mode) {
-  console.log(`***** layoutMode changing to ${mode}`);
   state.layoutMode = mode;
 }
 
