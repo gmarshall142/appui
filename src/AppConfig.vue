@@ -264,8 +264,7 @@ const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
 const primevue = globalProps.$primevue;
 
-// let d_layoutMode = props.layoutMode;
-let d_layoutMode = 'static';
+let d_layoutMode = props.layoutMode;
 let scale = 14;
 const scales = [12,13,14,15,16];
 let outsideClickListener = null;
