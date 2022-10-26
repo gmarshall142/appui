@@ -11,6 +11,10 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@auth0/auth0-vue": "^1.0.2",
+    "@fortawesome/fontawesome-svg-core": "~1.2.36",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@fortawesome/vue-fontawesome": "^3.0.1",
     "chart.js": "3.3.2",
     "pinia": "^2.0.22",
     "primeflex": "^3.2.1",
@@ -19,6 +23,7 @@
     "prismjs": "^1.28.0",
     "sass": "^1.52.2",
     "vue": "^3.2.38",
+    "vue3-highlightjs": "^1.0.5",
     "vue-router": "^4.1.5"
   },
   "devDependencies": {

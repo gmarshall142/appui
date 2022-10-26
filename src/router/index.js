@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // import HomeView from '../views/HomeView.vue'
 import App from '../App.vue';
+import { createAuthGuard } from "@auth0/auth0-vue";
 
 // const routes = [
 //   {
@@ -23,6 +24,12 @@ const routes = [
     name: 'app',
     component: App,
     children: [
+      {
+        path: "/profile",
+        name: "profile",
+        component: import('../views/Profile.vue'),
+        beforeEnter: createAuthGuard(App)
+      },
       {
         path: '',
         name: 'dashboard',

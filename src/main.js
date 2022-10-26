@@ -7,6 +7,9 @@ import "./assets/styles/layout.scss";
 import "./assets/demo/flags/flags.css";
 
 import { createApp, reactive } from "vue";
+import { createAuth0 } from '@auth0/auth0-vue';
+import { domain, clientId as client_id } from "../auth_config.json";
+
 import { createPinia } from "pinia/dist/pinia";
 // import App from "./App.vue";
 import router from "./router";
@@ -96,6 +99,11 @@ import Tree from "primevue/tree";
 import TreeSelect from "primevue/treeselect";
 import TreeTable from "primevue/treetable";
 import TriStateCheckbox from "primevue/tristatecheckbox";
+import hljs from "vue3-highlightjs";
+import "highlight.js/styles/github.css";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faLink, faUser, faPowerOff } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 import CodeHighlight from "./AppCodeHighlight";
 import BlockViewer from "./BlockViewer.vue";
@@ -119,7 +127,14 @@ app.provide('globalProperties', app.config.globalProperties);
 app.use(PrimeVue, { ripple: true, inputStyle: "outlined" });
 app.use(ConfirmationService);
 app.use(ToastService);
-app.use(router);
+app.use(router)
+  .use(
+    createAuth0({
+      domain,
+      client_id,
+      redirect_uri: window.location.origin,
+    })
+  )
 app.use(pinia);
 
 app.directive("tooltip", Tooltip);
@@ -208,5 +223,6 @@ app.component("TreeTable", TreeTable);
 app.component("TriStateCheckbox", TriStateCheckbox);
 
 app.component("BlockViewer", BlockViewer);
+app.component("font-awesome-icon", FontAwesomeIcon);
 
 app.mount("#app");
