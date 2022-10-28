@@ -1,14 +1,14 @@
 <template>
   <div class="container">
     <div class="row align-items-center profile-header">
-      <div class="col-md-2 mb-3">
+      <div style="padding-right: 20px;">
         <img
           :src="user?.picture"
           alt="User's profile picture"
-          class="rounded-circle img-fluid profile-picture"
+          class="nav-user-profile rounded-circle"
         />
       </div>
-      <div class="col-md text-center text-md-left">
+      <div class="text-left text-md-left" style="padding-left: 40px;">
         <h2>{{ user?.name }}</h2>
         <p class="lead text-muted">{{ user?.email }}</p>
       </div>
@@ -35,3 +35,14 @@ export default {
 };
 </script>
 
+<style>
+.nav-user-profile {
+  max-width: unset;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+}
+</style>

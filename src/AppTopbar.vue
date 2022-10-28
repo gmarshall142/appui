@@ -26,54 +26,32 @@
         <span>Settings</span>
       </button>
     </li>
-<!--    <li>-->
-<!--      <button class="p-link layout-topbar-button">-->
-<!--        <i class="pi pi-user"></i>-->
-<!--        <span>Profile</span>-->
-<!--      </button>-->
-<!--      <button id="qsLoginBtn" class="p-link layout-topbar-button" @click="login">Log in</button>-->
-<!--    </li>-->
+    <li>
+      <button v-if="!isAuthenticated && !isLoading" id="qsLoginBtn" class="p-link layout-topbar-button" @click="login">Log in</button>
+      <SplitButton v-if="isAuthenticated"
+                   :model="userProfileItems"
+                   type="button"
+                   class="p-button-text p-button-sm mb-2"
+                   style="margin-bottom: 0 !important;"
+      >
+        <img
+            :src="user.picture"
+            alt="User's profile picture"
+            class="nav-user-profile rounded-circle"
+            width="40"
+        />
+      </SplitButton>
+      <Menu ref="profileMenu" :model="userProfileItems" :popup="true" />
+    </li>
   </ul>
-    <ul class="navbar-nav d-none d-md-block">
-      <li v-if="!isAuthenticated && !isLoading" class="nav-item">
-        <button
-            id="qsLoginBtn"
-            class="btn btn-primary btn-margin"
-            @click.prevent="login"
-        >Login</button>
-      </li>
-
-      <li class="nav-item dropdown" v-if="isAuthenticated">
-        <a
-            class="nav-link dropdown-toggle"
-            href="#"
-            id="profileDropDown"
-            data-toggle="dropdown"
-        >
-          <img
-              :src="user.picture"
-              alt="User's profile picture"
-              class="nav-user-profile rounded-circle"
-              width="50"
-          />
-        </a>
-        <div class="dropdown-menu dropdown-menu-right">
-          <div class="dropdown-header">{{ user.name }}</div>
-          <router-link to="/profile" class="dropdown-item dropdown-profile">
-            <font-awesome-icon class="mr-3" icon="user" />Profile
-          </router-link>
-          <a id="qsLogoutBtn" href="#" class="dropdown-item" @click.prevent="logout">
-            <font-awesome-icon class="mr-3" icon="power-off" />Log out
-          </a>
-        </div>
-      </li>
-    </ul>
 
   </div>
+
+
 </template>
 
 <script setup>
-import { computed, inject } from 'vue';
+import { computed, inject, watch, ref } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
 
 const auth0 = useAuth0();
@@ -81,9 +59,26 @@ const auth0 = useAuth0();
 const emit = defineEmits(['menu-toggle', 'topbar-menu-toggle']);
 const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
+// const profileMenu = ref(null);
 const isAuthenticated = auth0.isAuthenticated;
 const isLoading = auth0.isLoading;
 const user = auth0.user;
+const userName = ref(user);
+const userProfileItems = [
+  {
+    label: ''
+  },
+  {
+    label: 'Profile',
+    icon: 'pi pi-user',
+    to: '/profile'
+  },
+  {
+    label: 'Logout',
+    icon: 'pi pi-power-off',
+    command: () => { logout() }
+  }
+];
 
 const darkTheme = computed(() =>  {
   return appState.darkTheme;
@@ -93,12 +88,15 @@ function login() {
   auth0.loginWithRedirect();
 }
 
-
 function logout() {
   auth0.logout({
     returnTo: window.location.origin
   });
 }
+
+watch(() => userName.value, () => {
+  userProfileItems[0].label = user._rawValue.name;
+});
 
 function onMenuToggle(event) {
   emit('menu-toggle', event);
@@ -117,5 +115,19 @@ function topbarImage() {
 #mobileAuthNavBar {
   min-height: 125px;
   justify-content: space-between;
+}
+button.layout-topbar-button {
+  width: unset !important;
+}
+.p-splitbutton {
+  margin: 2px 0 -10px 20px;
+}
+button.p-button.p-component.p-button-icon-only.p-splitbutton-menubutton {
+  padding-left: 0;
+  border: none;
+  color: black;
+}
+.p-tieredmenu {
+  width: unset;
 }
 </style>

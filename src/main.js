@@ -5,6 +5,7 @@ import "primevue/resources/themes/lara-light-indigo/theme.css";
 import "prismjs/themes/prism-coy.css";
 import "./assets/styles/layout.scss";
 import "./assets/demo/flags/flags.css";
+import "./assets/auth0-theme.min.css";
 
 import { createApp, reactive } from "vue";
 import { createAuth0 } from '@auth0/auth0-vue';
@@ -99,11 +100,8 @@ import Tree from "primevue/tree";
 import TreeSelect from "primevue/treeselect";
 import TreeTable from "primevue/treetable";
 import TriStateCheckbox from "primevue/tristatecheckbox";
-import hljs from "vue3-highlightjs";
 import "highlight.js/styles/github.css";
-import { library } from "@fortawesome/fontawesome-svg-core";
-import { faLink, faUser, faPowerOff } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import Vue3HighlightJS from "vue3-highlightjs";
 
 import CodeHighlight from "./AppCodeHighlight";
 import BlockViewer from "./BlockViewer.vue";
@@ -136,6 +134,7 @@ app.use(router)
     })
   )
 app.use(pinia);
+app.use(Vue3HighlightJS);
 
 app.directive("tooltip", Tooltip);
 app.directive("ripple", Ripple);
@@ -223,6 +222,5 @@ app.component("TreeTable", TreeTable);
 app.component("TriStateCheckbox", TriStateCheckbox);
 
 app.component("BlockViewer", BlockViewer);
-app.component("font-awesome-icon", FontAwesomeIcon);
 
 app.mount("#app");
