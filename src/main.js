@@ -131,9 +131,11 @@ app.use(router)
       domain,
       client_id,
       redirect_uri: window.location.origin,
+      audience: "https://gmarshall.us",
     })
   )
 app.use(pinia);
+console.log('pinia active')
 app.use(Vue3HighlightJS);
 
 app.directive("tooltip", Tooltip);

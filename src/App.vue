@@ -21,13 +21,22 @@
 
 <script setup>
 import { useRoute } from 'vue-router';
-import { computed, inject, watch, onBeforeUpdate, reactive } from "vue";
+import { computed, inject, watch, onBeforeUpdate, onMounted, ref, reactive } from "vue";
 import AppTopBar from './AppTopbar.vue';
 import AppMenu from './AppMenu.vue';
 import AppConfig from './AppConfig.vue';
 import AppFooter from './AppFooter.vue';
+import { useAuth0 } from '@auth0/auth0-vue';
+import { useUserStore } from '@/stores/user';
 
 const route = useRoute();
+const userStore = useUserStore();
+const auth0 = useAuth0();
+const user = auth0.user;
+const userName = ref(user);
+console.log('App auth0 set');
+userStore.init();
+
 const emit = defineEmits(['change-theme'])
 const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
@@ -157,11 +166,21 @@ onBeforeUpdate(() => {
     removeClass(document.body, 'body-overflow-hidden');
 });
 
+onMounted(() => {
+  console.log('** App.onMounted');
+  userStore.init();
+});
+
 watch(() => route.name, () => {
   const toast = globalProps.$toast;
   menuActive = false;
   toast.removeAllGroups();
 });
+
+// watch(() => userName.value, () => {
+//   // userProfileItems[0].label = user._rawValue.name;
+//   userStore.setAuth0(auth0);
+// });
 
 const containerClass = computed(() => {
   const primevue = globalProps.$primevue;
