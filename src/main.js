@@ -135,7 +135,6 @@ app.use(router)
     })
   )
 app.use(pinia);
-console.log('pinia active')
 app.use(Vue3HighlightJS);
 
 app.directive("tooltip", Tooltip);

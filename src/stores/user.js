@@ -1,9 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-vue';
 import { defineStore } from "pinia/dist/pinia";
 
-console.log('--- user.js');
 let auth0 = {};
-// const user = auth0.user;
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -24,14 +22,8 @@ export const useUserStore = defineStore('user', {
         returnTo: returnTo
       });
     },
-    // setAuth0(a) {
-    //   console.log(`setAuth0: ${JSON.stringify(a.user)}`);
-    //   auth0 = a;
-    //   this.user = a.user;
-    // },
     init() {
       auth0 = useAuth0();
-      console.log(`user init  isAuthenticated: ${auth0.isAuthenticated.value}`)
       this.user = auth0.user;
     }
   }

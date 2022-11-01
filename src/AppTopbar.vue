@@ -51,23 +51,14 @@
 </template>
 
 <script setup>
-import { computed, inject, watch, ref, onMounted } from 'vue';
-// import { useAuth0 } from '@auth0/auth0-vue';
+import { computed, inject } from 'vue';
 import { useUserStore } from '@/stores/user';
 
 const userStore = useUserStore();
-// const auth0 = useAuth0();
-// const user = auth0.user;
-// let user;
-// const userName = ref(user);
-console.log('AppTopbar auth0 set');
 
 const emit = defineEmits(['menu-toggle', 'topbar-menu-toggle']);
 const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
-// const profileMenu = ref(null);
-// const isAuthenticated = auth0.isAuthenticated;
-// const isLoading = auth0.isLoading;
 const userProfileItems = computed(() => [
   {
     label: `${userName.value}`
@@ -84,27 +75,18 @@ const userProfileItems = computed(() => [
   }
 ]);
 
-// onMounted(() => {
-//   console.log(`xx AppTopbar onMounted  userName: ${userName}`);
-//   userProfileItems[0].label = userName;
-// });
-
 const darkTheme = computed(() =>  {
   return appState.darkTheme;
 })
 
 const user = computed(() =>  {
   const u = userStore.currentUser;
-  console.log(`computed user: ${JSON.stringify(u)}`)
   return u ? u : {};
 })
 
 const userName = computed(() => {
   const u = userStore.currentUser;
-  const name = u ? u.name : '';
-  // userProfileItems[0].label = String(name);
-  console.log(`computed user name: ${name}`)
-  return name;
+  return u ? u.name : '';
 })
 
 const isAuthenticated = computed(() =>  {
@@ -116,20 +98,12 @@ const isLoading = computed(() =>  {
 })
 
 function login() {
-  // auth0.loginWithRedirect();
   userStore.login()
 }
 
 function logout() {
-  // auth0.logout({
-  //   returnTo: window.location.origin
-  // });
   userStore.logout(window.location.origin);
 }
-
-// watch(() => userName.value, () => {
-//   userProfileItems[0].label = user._rawValue.name;
-// });
 
 function onMenuToggle(event) {
   emit('menu-toggle', event);

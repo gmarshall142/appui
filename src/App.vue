@@ -33,8 +33,6 @@ const route = useRoute();
 const userStore = useUserStore();
 const auth0 = useAuth0();
 const user = auth0.user;
-const userName = ref(user);
-console.log('App auth0 set');
 userStore.init();
 
 const emit = defineEmits(['change-theme'])
@@ -166,21 +164,11 @@ onBeforeUpdate(() => {
     removeClass(document.body, 'body-overflow-hidden');
 });
 
-onMounted(() => {
-  console.log('** App.onMounted');
-  userStore.init();
-});
-
 watch(() => route.name, () => {
   const toast = globalProps.$toast;
   menuActive = false;
   toast.removeAllGroups();
 });
-
-// watch(() => userName.value, () => {
-//   // userProfileItems[0].label = user._rawValue.name;
-//   userStore.setAuth0(auth0);
-// });
 
 const containerClass = computed(() => {
   const primevue = globalProps.$primevue;
