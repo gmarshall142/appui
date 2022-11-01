@@ -30,6 +30,11 @@ const routes = [
         component: import('../views/Profile.vue'),
       },
       {
+        path: "/bikegearing",
+        name: "bikegearing",
+        component: import('../components/biking/BikeGearing.vue'),
+      },
+      {
         path: '',
         name: 'dashboard',
         component: () => import('../components/Dashboard.vue')

@@ -102,11 +102,16 @@ import TreeTable from "primevue/treetable";
 import TriStateCheckbox from "primevue/tristatecheckbox";
 import "highlight.js/styles/github.css";
 import Vue3HighlightJS from "vue3-highlightjs";
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faPersonBiking } from "@fortawesome/free-solid-svg-icons";
 
 import CodeHighlight from "./AppCodeHighlight";
 import BlockViewer from "./BlockViewer.vue";
 
 // import "./assets/main.css";
+
+library.add(faPersonBiking);
 
 router.beforeEach(function (to, from, next) {
   window.scrollTo(0, 0);
@@ -223,5 +228,7 @@ app.component("TreeTable", TreeTable);
 app.component("TriStateCheckbox", TriStateCheckbox);
 
 app.component("BlockViewer", BlockViewer);
+
+app.component('font-awesome-icon', FontAwesomeIcon);
 
 app.mount("#app");

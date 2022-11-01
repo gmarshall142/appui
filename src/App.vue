@@ -56,6 +56,12 @@ const menu = [
     }]
   },
   {
+    label: 'Bikes',
+    items: [{
+      label: 'Bike Gearing', icon: 'fa-solid fa-person-biking', to: '/bikegearing'
+    }]
+  },
+  {
     label: 'UI Components', icon: 'pi pi-fw pi-sitemap',
     items: [
       {label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/formlayout'},
