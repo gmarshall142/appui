@@ -21,13 +21,14 @@
 
 <script setup>
 import { useRoute } from 'vue-router';
-import { computed, inject, watch, onBeforeUpdate, onMounted, ref, reactive } from "vue";
+import { computed, inject, watch, onBeforeUpdate, onMounted, reactive } from "vue";
 import AppTopBar from './AppTopbar.vue';
 import AppMenu from './AppMenu.vue';
 import AppConfig from './AppConfig.vue';
 import AppFooter from './AppFooter.vue';
 import { useAuth0 } from '@auth0/auth0-vue';
 import { useUserStore } from '@/stores/user';
+import AxiosHelper from './modules/axiosHelper';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -38,6 +39,9 @@ userStore.init();
 const emit = defineEmits(['change-theme'])
 const globalProps = inject('globalProperties');
 const appState = globalProps.$appState;
+const axios = inject('axios');
+
+const axiosHelper = new AxiosHelper();
 
 let state = reactive({
   layoutMode: 'static',
@@ -168,6 +172,10 @@ onBeforeUpdate(() => {
     addClass(document.body, 'body-overflow-hidden');
   else
     removeClass(document.body, 'body-overflow-hidden');
+});
+
+onMounted(() => {
+  axiosHelper.init(axios);
 });
 
 watch(() => route.name, () => {

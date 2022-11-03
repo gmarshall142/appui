@@ -102,9 +102,11 @@ import TreeTable from "primevue/treetable";
 import TriStateCheckbox from "primevue/tristatecheckbox";
 import "highlight.js/styles/github.css";
 import Vue3HighlightJS from "vue3-highlightjs";
-import { library } from '@fortawesome/fontawesome-svg-core';
+import { library, dom } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faPersonBiking } from "@fortawesome/free-solid-svg-icons";
+import axios from 'axios';
+import VueAxios from 'vue-axios';
 
 import CodeHighlight from "./AppCodeHighlight";
 import BlockViewer from "./BlockViewer.vue";
@@ -112,6 +114,7 @@ import BlockViewer from "./BlockViewer.vue";
 // import "./assets/main.css";
 
 library.add(faPersonBiking);
+dom.watch();
 
 router.beforeEach(function (to, from, next) {
   window.scrollTo(0, 0);
@@ -120,6 +123,8 @@ router.beforeEach(function (to, from, next) {
 
 const app = createApp(AppWrapper);
 const pinia = createPinia();
+app.use(VueAxios, axios);
+app.provide('axios', app.config.globalProperties.axios);
 
 app.config.globalProperties.$appState = reactive({
   theme: "lara-light-indigo",
@@ -130,6 +135,7 @@ app.provide('globalProperties', app.config.globalProperties);
 app.use(PrimeVue, { ripple: true, inputStyle: "outlined" });
 app.use(ConfirmationService);
 app.use(ToastService);
+// Auth0 ---------------------------------------------------
 app.use(router)
   .use(
     createAuth0({

@@ -2,6 +2,12 @@
 	<div class="card">
 		<h5>Bike Gearing</h5>
 		<div class="grid p-fluid mt-3">
+      <div class="field col-12 md:col-4">
+				<span class="p-float-label">
+					<Dropdown id="bikes" :options="bikeOptions" v-model="bikeVal" optionLabel="name" optionValue="id"></Dropdown>
+					<label for="bikes">Bikes</label>
+				</span>
+      </div>
 			<div class="field col-12 md:col-4">
 				<span class="p-float-label">
 					<InputText type="text" id="inputtext" v-model="value1" />
@@ -51,12 +57,6 @@
 			</div>
 			<div class="field col-12 md:col-4">
 				<span class="p-float-label">
-					<Dropdown id="dropdown" :options="cities" v-model="value8" optionLabel="name"></Dropdown>
-					<label for="dropdown">Dropdown</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
 					<MultiSelect id="multiselect" :options="cities" v-model="value9" optionLabel="name" :filter="false"></MultiSelect>
 					<label for="multiselect">MultiSelect</label>
 				</span>
@@ -71,54 +71,58 @@
 	</div>
 </template>
 
-<script>
-// import CountryService from '../service/CountryService';
-export default {
-	data() {
-		return {
-			countries: [],
-			filteredCountries: null,
-			cities: [
-				{ name: 'New York', code: 'NY' },
-				{ name: 'Rome', code: 'RM' },
-				{ name: 'London', code: 'LDN' },
-				{ name: 'Istanbul', code: 'IST' },
-				{ name: 'Paris', code: 'PRS' },
-			],
-			value1: null,
-			value2: null,
-			value3: null,
-			value4: null,
-			value5: null,
-			value6: null,
-			value7: null,
-			value8: null,
-			value9: null,
-			value10: null,
-		};
-	},
-	created() {
-		// this.countryService = new CountryService();
-	},
-	mounted() {
-		// this.countryService.getCountries().then((countries) => {
-		// 	this.countries = countries;
-		// });
-	},
-	methods: {
-		searchCountry(event) {
-			// in a real application, make a request to a remote url with the query and
-			// return filtered results, for demo we filter at client side
-			const filtered = [];
-			const query = event.query;
-			for (let i = 0; i < this.countries.length; i++) {
-				const country = this.countries[i];
-				if (country.name.toLowerCase().indexOf(query.toLowerCase()) == 0) {
-					filtered.push(country);
-				}
-			}
-			this.filteredCountries = filtered;
-		},
-	},
-};
+<script setup>
+import { onMounted, ref } from "vue";
+import AxiosHelper from '../../modules/axiosHelper';
+import _ from 'lodash';
+
+const axiosHelper = new AxiosHelper();
+const countries = [];
+const filteredCountries = null;
+let bikes = ref(null);
+const bikeOptions = ref(null);
+const bikeVal = ref(null);
+
+const cities = [
+  { name: 'New York', code: 'NY' },
+  { name: 'Rome', code: 'RM' },
+  { name: 'London', code: 'LDN' },
+  { name: 'Istanbul', code: 'IST' },
+  { name: 'Paris', code: 'PRS' },
+];
+
+
+const value1 = null;
+const value2 = null;
+const value3 = null;
+const value4 = null;
+const value5 = null;
+const value6 = null;
+const value7 = null;
+const value9 = null;
+const value10 = null;
+const value8 = ref(null);
+
+onMounted(() => {
+  fetchBikes();
+});
+
+function fetchBikes() {
+  bikes = [];
+  const options = [];
+  axiosHelper.get('/bikes')
+    .then((response) => {
+      bikes = response.data;
+      _.forEach(bikes, it => {
+        const itm = { name: it.name, id: it.id };
+        options.push(itm);
+      })
+      console.log(`bikeOptions: ${JSON.stringify(options)}`);
+      bikeOptions.value = options;
+    })
+    .catch((err) => {
+      // TODO: replace with alert
+      // console.log(err.response.data);
+    });
+}
 </script>
