@@ -1,87 +1,100 @@
 <template>
 	<div class="card">
 		<h5>Bike Gearing</h5>
-		<div class="grid p-fluid mt-3">
-      <div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<Dropdown id="bikes" :options="bikeOptions" v-model="bikeVal" optionLabel="name" optionValue="id"></Dropdown>
-					<label for="bikes">Bikes</label>
-				</span>
+    <form @submit.prevent="handleSubmit(!v$.$invalid)" class="p-fluid">
+      <div class="grid p-fluid mt-3">
+        <!-- Bike / ID -->
+        <div class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <Dropdown id="bikes" :options="state.bikeOptions" v-model="state.bikeVal" show-clear
+                      optionLabel="name" optionValue="id" @change="bikeHandler"
+                      :class="{'p-invalid':v$.bikes.$invalid && submitted}"></Dropdown>
+            <label for="bikes">Bikes</label>
+          </span>
+        </div>
+        <div v-if="state.bikeVal === NEW_ID" class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <InputText type="text" id="bikename" v-model="state.record.name" />
+            <label for="bikename">Bike Name</label>
+          </span>
+        </div>
+        <div :class="bikeClass" />
+        <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
+        <!-- Bike Rim / Tire Size -->
+        <div class="field col-12 md:col-1">Rim Size</div>
+        <div class="field col-12 md:col-3">
+          <span class="p-float-label">
+            <Dropdown id="bikerims" :options="state.bikeRimOptions" v-model="state.record.bikerimid" show-clear
+                      optionLabel="name" optionValue="id" @change="rimHandler"></Dropdown>
+            <label for="bikerims">Bike Rims</label>
+          </span>
+        </div>
+        <div class="field col-12 md:col-1" />
+        <div class="field col-12 md:col-1">Rim Diameter:&nbsp;&nbsp;{{ state.rim.diameter }}</div>
+        <div class="field col-12 md:col-2" />
+        <div class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <InputNumber id="tiresize" v-model="value6"></InputNumber>
+            <label for="tiresize">Tire Size (mm)</label>
+          </span>
+        </div>
+        <!-- Chainrings / Cogs -->
+        <div class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <InputText type="text" id="chainrings" v-model="state.record.chainrings" />
+            <label for="chainrings">Chain Rings</label>
+          </span>
+        </div>
+        <div class="field col-12 md:col-8">
+          <span class="p-float-label">
+            <InputText type="text" id="cogs" v-model="state.record.cogs" />
+            <label for="cogs">Cogs</label>
+          </span>
+        </div>
       </div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputText type="text" id="inputtext" v-model="value1" />
-					<label for="inputtext">InputText</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<AutoComplete id="autocomplete" v-model="value2" :suggestions="filteredCountries" @complete="searchCountry($event)" field="name"></AutoComplete>
-					<label for="autocomplete">AutoComplete</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<Calendar inputId="calendar" v-model="value3"></Calendar>
-					<label for="calendar">Calendar</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<Chips inputId="chips" v-model="value4"></Chips>
-					<label for="chips">Chips</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputMask id="inputmask" mask="99/99/9999" v-model="value5"></InputMask>
-					<label for="inputmask">InputMask</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputNumber id="inputnumber" v-model="value6"></InputNumber>
-					<label for="inputnumber">InputNumber</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<div class="p-inputgroup">
-					<span class="p-inputgroup-addon">
-						<i class="pi pi-user"></i>
-					</span>
-					<span class="p-float-label">
-						<InputText type="text" id="inputgroup" v-model="value7" />
-						<label for="inputgroup">InputGroup</label>
-					</span>
-				</div>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<MultiSelect id="multiselect" :options="cities" v-model="value9" optionLabel="name" :filter="false"></MultiSelect>
-					<label for="multiselect">MultiSelect</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<Textarea inputId="textarea" rows="3" cols="30" v-model="value10"></Textarea>
-					<label for="textarea">Textarea</label>
-				</span>
-			</div>
-		</div>
-	</div>
+    </form>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import {computed, onMounted, reactive, ref} from "vue";
+import { required } from "@vuelidate/validators";
+import { useVuelidate } from "@vuelidate/core";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
 const axiosHelper = new AxiosHelper();
-const countries = [];
-const filteredCountries = null;
-let bikes = ref(null);
-const bikeOptions = ref(null);
-const bikeVal = ref(null);
+const NEW_ID = 0;
+const emptyRim = {
+  id: null,
+  name: '',
+  description: '',
+  diameter: null
+}
+const emptyRecord = {
+  id: null,
+  chainrings: [],
+  cogs: [],
+  bikerimid: null,
+  tirewidth: null,
+  BikeRim: _.cloneDeep(emptyRim)
+};
+
+const state = reactive({
+  bikes: [],
+  bikeOptions: [],
+  bikeVal: null,
+  bikeRimOptions: [],
+  record: _.cloneDeep(emptyRecord),
+  rim: _.cloneDeep(emptyRim)
+});
+
+const rules = {
+  bikes: { required },
+};
+const v$ = useVuelidate(rules, state);
+const submitted = ref(false);
+const showMessage = ref(false);
 
 const cities = [
   { name: 'New York', code: 'NY' },
@@ -92,37 +105,99 @@ const cities = [
 ];
 
 
-const value1 = null;
-const value2 = null;
-const value3 = null;
-const value4 = null;
-const value5 = null;
 const value6 = null;
-const value7 = null;
-const value9 = null;
-const value10 = null;
-const value8 = ref(null);
 
 onMounted(() => {
+  fetchBikeRims();
   fetchBikes();
 });
 
-function fetchBikes() {
-  bikes = [];
-  const options = [];
-  axiosHelper.get('/bikes')
+// const record = computed(() =>  {
+//   return currRecord.value;
+// })
+
+// const rim = computed(() =>  {
+//   return currRim.value;
+// })
+
+const bikeClass = computed(() => {
+  const numCols = state.bikeVal === NEW_ID ? 3 : 7;
+  return `field col-12 md:col-${numCols}`;
+})
+
+function fetchBikeRims() {
+  state.bikeRimOptions = [];
+  axiosHelper.get('/bikerims')
     .then((response) => {
-      bikes = response.data;
-      _.forEach(bikes, it => {
-        const itm = { name: it.name, id: it.id };
-        options.push(itm);
-      })
-      console.log(`bikeOptions: ${JSON.stringify(options)}`);
-      bikeOptions.value = options;
+      state.bikeRimOptions = response.data;
     })
     .catch((err) => {
       // TODO: replace with alert
       // console.log(err.response.data);
     });
 }
+
+function fetchBikes() {
+  state.bikes = [];
+  const options = [{ id: 0, name: 'New' }];
+  axiosHelper.get('/bikes')
+    .then((response) => {
+      state.bikes = response.data;
+      _.forEach(state.bikes, it => {
+        const itm = { name: it.name, id: it.id };
+        options.push(itm);
+      })
+      state.bikeOptions = options;
+    })
+    .catch((err) => {
+      // TODO: replace with alert
+      // console.log(err.response.data);
+    });
+}
+
+function rimHandler(e) {
+  if(e.value !== state.bikeRimOptions.id) {
+    console.log(`rimHandler: ${JSON.stringify(e)}`);
+    state.rim = _.cloneDeep(emptyRim);
+    const fnd = _.find(state.bikeRimOptions, it => it.id === e.value);
+    if(fnd) {
+      state.rim = fnd;
+    }
+  }
+}
+
+function bikeHandler(e) {
+  const val = e.value;
+  if(val === null || val === NEW_ID) {
+    state.record = _.cloneDeep(emptyRecord);
+  } else if(val !== state.record.id) {
+    const fnd = _.find(state.bikes, it => it.id === val);
+    if(fnd) {
+      state.record = fnd;
+    }
+  }
+  rimHandler({ value: state.record.bikerimid });
+}
+
+const handleSubmit = (isFormValid) => {
+  submitted.value = true;
+
+  if (!isFormValid) {
+    return;
+  }
+
+  toggleDialog();
+}
+const toggleDialog = () => {
+  showMessage.value = !showMessage.value;
+
+  if(!showMessage.value) {
+    resetForm();
+  }
+}
+
+const resetForm = () => {
+
+}
+
 </script>
