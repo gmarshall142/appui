@@ -1,56 +1,62 @@
 <template>
 	<div class="card">
 		<h5>Bike Gearing</h5>
-    <form @submit.prevent="handleSubmit(!v$.$invalid)" class="p-fluid">
-      <div class="grid p-fluid mt-3">
-        <!-- Bike / ID -->
-        <div class="field col-12 md:col-4">
-          <span class="p-float-label">
-            <Dropdown id="bikes" :options="state.bikeOptions" v-model="state.bikeVal" show-clear
-                      optionLabel="name" optionValue="id" @change="bikeHandler"
-                      :class="{'p-invalid':v$.bikes.$invalid && submitted}"></Dropdown>
-            <label for="bikes">Bikes</label>
-          </span>
-        </div>
-        <div v-if="state.bikeVal === NEW_ID" class="field col-12 md:col-4">
-          <span class="p-float-label">
-            <InputText type="text" id="bikename" v-model="state.record.name" />
-            <label for="bikename">Bike Name</label>
-          </span>
-        </div>
-        <div :class="bikeClass" />
-        <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
-        <!-- Bike Rim / Tire Size -->
-        <div class="field col-12 md:col-1">Rim Size</div>
-        <div class="field col-12 md:col-3">
-          <span class="p-float-label">
-            <Dropdown id="bikerims" :options="state.bikeRimOptions" v-model="state.record.bikerimid" show-clear
-                      optionLabel="name" optionValue="id" @change="rimHandler"></Dropdown>
-            <label for="bikerims">Bike Rims</label>
-          </span>
-        </div>
-        <div class="field col-12 md:col-1" />
-        <div class="field col-12 md:col-1">Rim Diameter:&nbsp;&nbsp;{{ state.rim.diameter }}</div>
-        <div class="field col-12 md:col-2" />
-        <div class="field col-12 md:col-4">
-          <span class="p-float-label">
-            <InputNumber id="tiresize" v-model="value6"></InputNumber>
-            <label for="tiresize">Tire Size (mm)</label>
-          </span>
-        </div>
-        <!-- Chainrings / Cogs -->
-        <div class="field col-12 md:col-4">
-          <span class="p-float-label">
-            <InputText type="text" id="chainrings" v-model="state.record.chainrings" />
-            <label for="chainrings">Chain Rings</label>
-          </span>
-        </div>
-        <div class="field col-12 md:col-8">
-          <span class="p-float-label">
-            <InputText type="text" id="cogs" v-model="state.record.cogs" />
-            <label for="cogs">Cogs</label>
-          </span>
-        </div>
+    <form @submit.prevent="handleSubmit(!v$.$invalid)" class="grid p-fluid mt-3">
+      <!-- Bike / ID -->
+      <div class="field col-12 md:col-4">
+        <span class="p-float-label">
+          <Dropdown id="bikes" :options="state.bikeOptions" v-model="v$.bikeVal.$model" show-clear
+                    optionLabel="name" optionValue="id" @change="bikeHandler"
+                    :class="{'p-invalid':v$.bikeVal.$invalid && submitted}"></Dropdown>
+          <label for="bikes" :class="{'p-error':v$.bikeVal.$invalid && submitted}">Bikes*</label>
+        </span>
+      </div>
+      <div v-if="state.bikeVal === NEW_ID" class="field col-12 md:col-4">
+        <span class="p-float-label">
+          <InputText type="text" id="bikename" v-model="state.record.name"
+                     :class="{'p-invalid':v$.record.name.$invalid && submitted}"/>
+          <label for="bikename" :class="{'p-error':v$.record.name.$invalid && submitted}">Bike Name*</label>
+        </span>
+      </div>
+      <div :class="bikeClass" />
+      <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
+      <!-- Bike Rim / Tire Size -->
+      <div class="field col-12 md:col-1">Rim Size</div>
+      <div class="field col-12 md:col-3">
+        <span class="p-float-label">
+          <Dropdown id="bikerims" :options="state.bikeRimOptions" v-model="state.record.bikerimid" show-clear
+                    optionLabel="name" optionValue="id" @change="rimHandler"></Dropdown>
+          <label for="bikerims">Bike Rims*</label>
+        </span>
+      </div>
+      <div class="field col-12 md:col-1" />
+      <div class="field col-12 md:col-1">Rim Diameter:&nbsp;&nbsp;{{ state.rim.diameter }}</div>
+      <div class="field col-12 md:col-2" />
+      <div class="field col-12 md:col-4">
+        <span class="p-float-label">
+          <InputNumber id="tiresize" v-model="value6"></InputNumber>
+          <label for="tiresize">Tire Size (mm)*</label>
+        </span>
+      </div>
+      <!-- Chainrings / Cogs -->
+      <div class="field col-12 md:col-4">
+        <span class="p-float-label">
+          <InputText type="text" id="chainrings" v-model="state.record.chainrings" />
+          <label for="chainrings">Chain Rings*</label>
+        </span>
+      </div>
+      <div class="field col-12 md:col-8">
+        <span class="p-float-label">
+          <InputText type="text" id="cogs" v-model="state.record.cogs" />
+          <label for="cogs">Cogs*</label>
+        </span>
+      </div>
+      <!-- Save / Clear -->
+      <div class="field col-12 md:col-2">
+        <Button type="submit" label="Submit" class="mt-2 p-button-sm" />
+      </div>
+      <div class="field col-12 md:col-2">
+        <Button type="button" label="Clear" class="mt-2 p-button-sm" />
       </div>
     </form>
   </div>
@@ -90,7 +96,11 @@ const state = reactive({
 });
 
 const rules = {
-  bikes: { required },
+  bikeVal: { required },
+  bikeRimOptions: {},
+  record: {
+    name: { required },
+  }
 };
 const v$ = useVuelidate(rules, state);
 const submitted = ref(false);
