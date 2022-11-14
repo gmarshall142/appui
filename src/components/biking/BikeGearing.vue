@@ -1,64 +1,68 @@
 <template>
 	<div class="card">
 		<h5>Bike Gearing</h5>
-    <form @submit.prevent="handleSubmit(!v$.$invalid)" class="grid p-fluid mt-3">
-      <!-- Bike / ID -->
-      <div class="field col-12 md:col-4">
-        <span class="p-float-label">
-          <Dropdown id="bikes" :options="state.bikeOptions" v-model="v$.bikeVal.$model" show-clear
-                    optionLabel="name" optionValue="id" @change="bikeHandler"
-                    :class="{'p-invalid':v$.bikeVal.$invalid && submitted}"></Dropdown>
-          <label for="bikes" :class="{'p-error':v$.bikeVal.$invalid && submitted}">Bikes*</label>
-        </span>
-      </div>
-      <div v-if="state.bikeVal === NEW_ID" class="field col-12 md:col-4">
-        <span class="p-float-label">
-          <InputText type="text" id="bikename" v-model="state.record.name"
-                     :class="{'p-invalid':v$.record.name.$invalid && submitted}"/>
-          <label for="bikename" :class="{'p-error':v$.record.name.$invalid && submitted}">Bike Name*</label>
-        </span>
-      </div>
-      <div :class="bikeClass" />
-      <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
-      <!-- Bike Rim / Tire Size -->
-      <div class="field col-12 md:col-1">Rim Size</div>
-      <div class="field col-12 md:col-3">
-        <span class="p-float-label">
-          <Dropdown id="bikerims" :options="state.bikeRimOptions" v-model="state.record.bikerimid" show-clear
-                    optionLabel="name" optionValue="id" @change="rimHandler"></Dropdown>
-          <label for="bikerims">Bike Rims*</label>
-        </span>
-      </div>
-      <div class="field col-12 md:col-1" />
-      <div class="field col-12 md:col-1">Rim Diameter:&nbsp;&nbsp;{{ state.rim.diameter }}</div>
-      <div class="field col-12 md:col-2" />
-      <div class="field col-12 md:col-4">
-        <span class="p-float-label">
-          <InputNumber id="tiresize" v-model="value6"></InputNumber>
-          <label for="tiresize">Tire Size (mm)*</label>
-        </span>
-      </div>
-      <!-- Chainrings / Cogs -->
-      <div class="field col-12 md:col-4">
-        <span class="p-float-label">
-          <InputText type="text" id="chainrings" v-model="state.record.chainrings" />
-          <label for="chainrings">Chain Rings*</label>
-        </span>
-      </div>
-      <div class="field col-12 md:col-8">
-        <span class="p-float-label">
-          <InputText type="text" id="cogs" v-model="state.record.cogs" />
-          <label for="cogs">Cogs*</label>
-        </span>
+    <form @submit.prevent="handleSubmit(!v$.$invalid)">
+      <div  class="grid p-fluid mt-3">
+        <!-- Bike / ID -->
+        <div class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <Dropdown id="bikes" :options="state.bikeOptions" v-model="v$.bikeVal.$model" show-clear
+                      optionLabel="name" optionValue="id" @change="bikeHandler"
+                      :class="{'p-invalid':v$.bikeVal.$invalid && submitted}" />
+            <label for="bikes" :class="{'p-error':v$.bikeVal.$invalid && submitted}">Bikes*</label>
+          </span>
+        </div>
+        <div v-if="state.bikeVal === NEW_ID" class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <InputText type="text" id="bikename" v-model="state.record.name"
+                       :class="{'p-invalid':v$.record.name.$invalid && submitted}" />
+            <label for="bikename" :class="{'p-error':v$.record.name.$invalid && submitted}">Bike Name*</label>
+          </span>
+        </div>
+        <div :class="bikeClass" />
+        <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
+        <!-- Bike Rim / Tire Size -->
+        <div class="field col-12 md:col-1">Rim Size</div>
+        <div class="field col-12 md:col-3">
+          <span class="p-float-label">
+            <Dropdown id="bikerims" :options="state.bikeRimOptions" v-model="state.record.bikerimid" show-clear
+                      optionLabel="name" optionValue="id" @change="rimHandler"
+                      :class="{'p-invalid':v$.record.bikerimid.$invalid && submitted}" />
+            <label for="bikerims" :class="{'p-error':v$.record.bikerimid.$invalid && submitted}">Bike Rims*</label>
+          </span>
+        </div>
+        <div class="field col-12 md:col-1" />
+        <div class="field col-12 md:col-1">Rim Diameter:&nbsp;&nbsp;{{ state.rim.diameter }}</div>
+        <div class="field col-12 md:col-2" />
+        <div class="field col-12 md:col-2">
+          <span class="p-float-label">
+            <InputNumber id="tiresize" v-model="state.record.tirewidth"
+                         :class="{'p-invalid':v$.record.tirewidth.$invalid && submitted}" />
+            <label for="tiresize" :class="{'p-error':v$.record.tirewidth.$invalid && submitted}">Tire Width (mm)*</label>
+          </span>
+        </div>
+        <!-- Chainrings / Cogs -->
+        <div class="field col-12 md:col-4">
+          <span class="p-float-label">
+            <InputText type="text" id="chainrings" v-model="state.record.chainrings"
+                       :class="{'p-invalid':v$.record.chainrings.$invalid && submitted}" />
+            <label for="chainrings" :class="{'p-error':v$.record.chainrings.$invalid && submitted}">Chain Rings*</label>
+          </span>
+        </div>
+        <div class="field col-12 md:col-8">
+          <span class="p-float-label">
+            <InputText type="text" id="cogs" v-model="state.record.cogs"
+                       :class="{'p-invalid':v$.record.cogs.$invalid && submitted}" />
+            <label for="cogs" :class="{'p-error':v$.record.cogs.$invalid && submitted}">Cogs*</label>
+          </span>
+        </div>
       </div>
       <!-- Save / Clear -->
-      <div class="field col-12 md:col-2">
-        <Button type="submit" label="Submit" class="mt-2 p-button-sm" />
-      </div>
-      <div class="field col-12 md:col-2">
-        <Button type="button" label="Clear" class="mt-2 p-button-sm" />
-      </div>
+      <Button type="submit" label="Submit" class="button-bar p-button-sm" />
+      <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear" />
     </form>
+  </div>
+  <div class="card">
   </div>
 </template>
 
@@ -70,7 +74,7 @@ import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
 const axiosHelper = new AxiosHelper();
-const NEW_ID = 0;
+const NEW_ID = 9999;
 const emptyRim = {
   id: null,
   name: '',
@@ -100,40 +104,29 @@ const rules = {
   bikeRimOptions: {},
   record: {
     name: { required },
+    chainrings: { required },
+    cogs: { required },
+    bikerimid: { required },
+    tirewidth: { required }
   }
 };
 const v$ = useVuelidate(rules, state);
 const submitted = ref(false);
-const showMessage = ref(false);
-
-const cities = [
-  { name: 'New York', code: 'NY' },
-  { name: 'Rome', code: 'RM' },
-  { name: 'London', code: 'LDN' },
-  { name: 'Istanbul', code: 'IST' },
-  { name: 'Paris', code: 'PRS' },
-];
-
-
-const value6 = null;
 
 onMounted(() => {
   fetchBikeRims();
   fetchBikes();
 });
 
-// const record = computed(() =>  {
-//   return currRecord.value;
-// })
-
-// const rim = computed(() =>  {
-//   return currRim.value;
-// })
-
 const bikeClass = computed(() => {
   const numCols = state.bikeVal === NEW_ID ? 3 : 7;
   return `field col-12 md:col-${numCols}`;
 })
+
+function clear() {
+  state.bikeVal = null;
+  bikeHandler({ value: null });
+}
 
 function fetchBikeRims() {
   state.bikeRimOptions = [];
@@ -149,7 +142,7 @@ function fetchBikeRims() {
 
 function fetchBikes() {
   state.bikes = [];
-  const options = [{ id: 0, name: 'New' }];
+  const options = [];
   axiosHelper.get('/bikes')
     .then((response) => {
       state.bikes = response.data;
@@ -157,7 +150,7 @@ function fetchBikes() {
         const itm = { name: it.name, id: it.id };
         options.push(itm);
       })
-      state.bikeOptions = options;
+      state.bikeOptions = [ { name: 'New', id: NEW_ID }].concat(_.sortBy(options, 'name'));
     })
     .catch((err) => {
       // TODO: replace with alert
@@ -167,7 +160,6 @@ function fetchBikes() {
 
 function rimHandler(e) {
   if(e.value !== state.bikeRimOptions.id) {
-    console.log(`rimHandler: ${JSON.stringify(e)}`);
     state.rim = _.cloneDeep(emptyRim);
     const fnd = _.find(state.bikeRimOptions, it => it.id === e.value);
     if(fnd) {
@@ -196,18 +188,16 @@ const handleSubmit = (isFormValid) => {
     return;
   }
 
-  toggleDialog();
-}
-const toggleDialog = () => {
-  showMessage.value = !showMessage.value;
-
-  if(!showMessage.value) {
-    resetForm();
-  }
-}
-
-const resetForm = () => {
-
+  console.log("****** handleSubmit");
 }
 
 </script>
+
+<style scoped lang="css">
+  .button-bar {
+    width: 86px;
+    margin-top: 20px;
+    margin-right: 20px;
+    text-align: center;
+  }
+</style>
