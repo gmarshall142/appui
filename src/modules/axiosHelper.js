@@ -1,9 +1,11 @@
 import { useServicesStore } from '@/stores/services';
+import { useUserStore } from "../stores/user";
 import { inject } from 'vue';
 import _ from 'lodash';
 
 // const servicesStore = useServicesStore();
 let servicesStore;
+let userStore;
 
 export default class AxiosHelper {
   static defaultHeaders = {};
@@ -13,6 +15,7 @@ export default class AxiosHelper {
 
   init = (axiosInst) => {
     servicesStore = useServicesStore();
+    userStore = useUserStore();
 
     //AxiosHelper.axiosInstance = axiosInst;
     // AxiosHelper.appContext = context;
@@ -27,11 +30,11 @@ export default class AxiosHelper {
       config.withCredentials = true;
       // Get the access token from the auth wrapper
       try {
-        const token = '';
-        // const token = await AxiosHelper.appContext.$auth.getTokenSilently();
-//    const token = await Auth0Plugin.getTokenSilently()
-//         config.headers['Authorization'] = `Bearer ${token}`;
-      } catch(e) {}
+        const token = await userStore.userToken;
+        config.headers['Authorization'] = `Bearer ${token}`;
+      } catch(e) {
+        console.log(JSON.stringify(e));
+      }
 
       axios(config)
         .then((response) => {

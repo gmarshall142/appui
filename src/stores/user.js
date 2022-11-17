@@ -11,7 +11,10 @@ export const useUserStore = defineStore('user', {
     currentUser: (state) => state.user,
     userName: (state) => state.user ? state.user.name : '',
     isAuthenticated: () => auth0.isAuthenticated.value,
-    isLoading: () => auth0.isLoading.value
+    isLoading: () => auth0.isLoading.value,
+    userToken: async () => {
+      return await auth0.getAccessTokenSilently();
+    }
   },
   actions: {
     login() {

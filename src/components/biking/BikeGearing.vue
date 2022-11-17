@@ -1,6 +1,11 @@
 <template>
 	<div class="card">
 		<h5>Bike Gearing</h5>
+
+    <transition-group name="p-message" tag="div">
+      <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id">{{msg.content}}</Message>
+    </transition-group>
+
     <form @submit.prevent="handleSubmit(!v$.$invalid)">
       <div  class="grid p-fluid mt-3">
         <!-- Bike / ID -->
@@ -75,6 +80,7 @@ import _ from 'lodash';
 
 const axiosHelper = new AxiosHelper();
 const NEW_ID = 9999;
+const messages = ref([]);
 const emptyRim = {
   id: null,
   name: '',
@@ -124,6 +130,7 @@ const bikeClass = computed(() => {
 })
 
 function clear() {
+  messages.value = [];
   state.bikeVal = null;
   bikeHandler({ value: null });
 }
@@ -135,8 +142,9 @@ function fetchBikeRims() {
       state.bikeRimOptions = response.data;
     })
     .catch((err) => {
-      // TODO: replace with alert
-      // console.log(err.response.data);
+      const msgId = messages.value.length + 1;
+      const msg = `Bike Rims ${err.message}`;
+      messages.value.push({ severity: 'error', content: msg, id: msgId });
     });
 }
 
@@ -153,8 +161,9 @@ function fetchBikes() {
       state.bikeOptions = [ { name: 'New', id: NEW_ID }].concat(_.sortBy(options, 'name'));
     })
     .catch((err) => {
-      // TODO: replace with alert
-      // console.log(err.response.data);
+      const msgId = messages.value.length + 1;
+      const msg = `Bikes ${err.message}`;
+      messages.value.push({ severity: 'error', content: msg, id: msgId });
     });
 }
 
