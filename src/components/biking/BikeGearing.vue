@@ -68,6 +68,26 @@
     </form>
   </div>
   <div class="card">
+    <div  class="grid p-fluid mt-3">
+      <div class="field col-12 md:col-3" >
+        <label for="cadence" style="margin-right: 20px">Cadence</label>
+        <InputText type="text" id="cadence" v-model="state.cadence" style="width: 80px; height: 16px;" @change="calcChartData" />
+      </div>
+      <div class="field col-12 md:col-6" />
+      <div class="field col-12 md:col-1">
+        <span class="field-radiobutton">
+          <RadioButton inputId="miles" name="measure" value="Miles" v-model="state.measure" />
+          <label for="miles">Miles</label>
+        </span>
+      </div>
+      <div class="field col-12 md:col-1">
+        <span class="field-radiobutton">
+          <RadioButton inputId="kilometers" name="measure" value="Kilos" v-model="state.measure" />
+          <label for="kilometers">Kilos</label>
+        </span>
+      </div>
+    </div>
+    <Chart type="line" :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -75,12 +95,14 @@
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
+// import Chart from 'primevue/chart';
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
 const axiosHelper = new AxiosHelper();
 const NEW_ID = 9999;
 const messages = ref([]);
+const submitted = ref(false);
 const emptyRim = {
   id: null,
   name: '',
@@ -102,7 +124,9 @@ const state = reactive({
   bikeVal: null,
   bikeRimOptions: [],
   record: _.cloneDeep(emptyRecord),
-  rim: _.cloneDeep(emptyRim)
+  rim: _.cloneDeep(emptyRim),
+  cadence: 70,
+  measure: 'Kilos'
 });
 
 const rules = {
@@ -117,7 +141,58 @@ const rules = {
   }
 };
 const v$ = useVuelidate(rules, state);
-const submitted = ref(false);
+const chartOptions = ref(
+    {
+      indexAxis: 'y',
+      plugins: {
+        title: {
+          display: true,
+          text: 'Gearing Combinations'
+        },
+        legend: {
+          labels: {
+            color: '#495057'
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            text: 'Speed',
+            display: true
+          },
+          ticks: {
+            color: '#495057',
+            stepSize: 5
+          },
+          grid: {
+            color: '#ebedef'
+          }
+        },
+        y: {
+          title: {
+            text: 'Cogs',
+            display: true
+          },
+          ticks: {
+            color: '#495057',
+          },
+          grid: {
+            color: '#ebedef'
+          }
+        }
+      }
+    }
+);
+// const basicOptions = ref(
+//     {
+//       parsing: {
+//         xAxisKey: 'x',
+//         yAxisKey: 'y'
+//       }
+//     }
+// );
+const chartData = ref(null);
 
 onMounted(() => {
   fetchBikeRims();
@@ -188,6 +263,7 @@ function bikeHandler(e) {
     }
   }
   rimHandler({ value: state.record.bikerimid });
+  calcChartData();
 }
 
 const handleSubmit = (isFormValid) => {
@@ -198,6 +274,62 @@ const handleSubmit = (isFormValid) => {
   }
 
   console.log("****** handleSubmit");
+}
+
+const colors = ['#42A5F5', '#FFA726'];
+const datas = [
+  [65, 59, 80, 81, 56, 55, 40],
+  [28, 48, 40, 19, 86, 27, 90]
+];
+
+const calcChartData = () => {
+  chartData.value = [];
+  if(state.bikeVal !== null && state.bikeVal !== NEW_ID) {
+    const r = state.rim.diameter;
+    const t = state.record.tirewidth;
+    const d = 3.13772 * (2 * t + r);
+    const circumMeters = Math.round(d / 1000);
+    const gears = state.record.chainrings;
+    const cogs = state.record.cogs;
+    const datasets = [];
+    // vals.push({ x: cog, y: speedKilos });
+    _.forEach(gears, (gear, idx) => {
+      const vals = [];
+      _.forEach(cogs, cog => {
+        const speedMeters = circumMeters * (gear / cog) * state.cadence * 60;
+        const speedKilos = speedMeters / 1000;
+        vals.push({ x: speedKilos.toFixed(2), y: cog });
+      })
+      datasets.push({
+        label: `${gear} Teeth`,
+        fill: false,
+        borderColor: colors[idx],
+        tension: .4,
+        data: vals.reverse()
+      });
+      // console.log(`gear: ${gear}  data: ${JSON.stringify(vals)}`)
+    })
+
+    const min = _.minBy(datasets[0].data, it => it.x).x;
+    const max = _.maxBy(datasets[datasets.length - 1].data, it => Math.round(it.x)).x;
+    let count = min - min % 5;
+    const labels = [String(count)];
+    while(count < max) {
+      labels.push(String(count += 5));
+    }
+    chartOptions.value.scales.x.count = cogs.length;
+    chartOptions.value.scales.y.labels = cogs;
+    // chartOptions.value.scales.x.labels = labels;
+    // chartOptions.value.scales.x.min = min;
+    // chartOptions.value.scales.x.max = max;
+    // console.log(`min: ${min}  max: ${max}  count: ${count}`);
+
+    // labels: _.clone(cogs).reverse(),
+    // labels: labels,
+    chartData.value = {
+      datasets: datasets
+    }
+  }
 }
 
 </script>
