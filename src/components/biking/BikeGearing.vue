@@ -76,18 +76,18 @@
       <div class="field col-12 md:col-6" />
       <div class="field col-12 md:col-1">
         <span class="field-radiobutton">
-          <RadioButton inputId="miles" name="measure" value="Miles" v-model="state.measure" />
+          <RadioButton id="miles" inputId="miles" name="measure" value="Miles" v-model="state.measure" @change="calcChartData" />
           <label for="miles">Miles</label>
         </span>
       </div>
       <div class="field col-12 md:col-1">
         <span class="field-radiobutton">
-          <RadioButton inputId="kilometers" name="measure" value="Kilos" v-model="state.measure" />
-          <label for="kilometers">Kilos</label>
+          <RadioButton id="kilos" inputId="kilometers" name="measure" value="Kilos" v-model="state.measure" @change="calcChartData" />
+          <label for="kilos">Kilos</label>
         </span>
       </div>
     </div>
-    <Chart type="line" :data="chartData" :options="chartOptions" />
+    <Chart type="line" :data="chartData" :options="chartOptions" :plugins="[verticalLine]" />
   </div>
 </template>
 
@@ -95,6 +95,7 @@
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
+import { verticalLine } from './VerticalLine';
 // import Chart from 'primevue/chart';
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
@@ -126,7 +127,7 @@ const state = reactive({
   record: _.cloneDeep(emptyRecord),
   rim: _.cloneDeep(emptyRim),
   cadence: 70,
-  measure: 'Kilos'
+  measure: 'Miles'
 });
 
 const rules = {
@@ -153,6 +154,11 @@ const chartOptions = ref(
           labels: {
             color: '#495057'
           }
+        },
+        verticalLine: {
+          dash: [2, 2],
+          color: 'ltgray',
+          width: 1
         }
       },
       scales: {
@@ -181,17 +187,9 @@ const chartOptions = ref(
             color: '#ebedef'
           }
         }
-      }
+      },
     }
 );
-// const basicOptions = ref(
-//     {
-//       parsing: {
-//         xAxisKey: 'x',
-//         yAxisKey: 'y'
-//       }
-//     }
-// );
 const chartData = ref(null);
 
 onMounted(() => {
@@ -298,7 +296,11 @@ const calcChartData = () => {
       _.forEach(cogs, cog => {
         const speedMeters = circumMeters * (gear / cog) * state.cadence * 60;
         const speedKilos = speedMeters / 1000;
-        vals.push({ x: speedKilos.toFixed(2), y: cog });
+        let speed = speedKilos;
+        if(state.measure === 'Miles') {
+          speed = speedKilos * 0.621371;
+        }
+        vals.push({ x: speed.toFixed(2), y: cog });
       })
       datasets.push({
         label: `${gear} Teeth`,
@@ -307,7 +309,6 @@ const calcChartData = () => {
         tension: .4,
         data: vals.reverse()
       });
-      // console.log(`gear: ${gear}  data: ${JSON.stringify(vals)}`)
     })
 
     const min = _.minBy(datasets[0].data, it => it.x).x;
@@ -319,13 +320,6 @@ const calcChartData = () => {
     }
     chartOptions.value.scales.x.count = cogs.length;
     chartOptions.value.scales.y.labels = cogs;
-    // chartOptions.value.scales.x.labels = labels;
-    // chartOptions.value.scales.x.min = min;
-    // chartOptions.value.scales.x.max = max;
-    // console.log(`min: ${min}  max: ${max}  count: ${count}`);
-
-    // labels: _.clone(cogs).reverse(),
-    // labels: labels,
     chartData.value = {
       datasets: datasets
     }
