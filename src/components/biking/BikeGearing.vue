@@ -65,40 +65,28 @@
       <!-- Save / Clear -->
       <Button type="submit" label="Submit" class="button-bar p-button-sm" />
       <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear" />
+      <div class="radio-buttons-div">
+        <span class="field-radiobutton radio-buttons">
+          <RadioButton id="graph" inputId="graph" name="display" value="Graph" v-model="state.display" />
+          <label for="graph">Graph</label>
+        </span>
+          <span class="field-radiobutton radio-buttons">
+          <RadioButton id="table" inputId="table" name="display" value="Table" v-model="state.display" />
+          <label for="table">Table</label>
+        </span>
+      </div>
     </form>
   </div>
-  <bike-gearing-graph :gearingState="state" />
-<!--  <div class="card">-->
-<!--    <div  class="grid p-fluid mt-3">-->
-<!--      <div class="field col-12 md:col-3" >-->
-<!--        <label for="cadence" style="margin-right: 20px">Cadence</label>-->
-<!--        <InputText type="text" id="cadence" v-model="state.cadence" style="width: 80px; height: 16px;" @change="calcChartData" />-->
-<!--      </div>-->
-<!--      <div class="field col-12 md:col-6" />-->
-<!--      <div class="field col-12 md:col-1">-->
-<!--        <span class="field-radiobutton">-->
-<!--          <RadioButton id="miles" inputId="miles" name="measure" value="Miles" v-model="state.measure" @change="calcChartData" />-->
-<!--          <label for="miles">Miles</label>-->
-<!--        </span>-->
-<!--      </div>-->
-<!--      <div class="field col-12 md:col-1">-->
-<!--        <span class="field-radiobutton">-->
-<!--          <RadioButton id="kilos" inputId="kilometers" name="measure" value="Kilos" v-model="state.measure" @change="calcChartData" />-->
-<!--          <label for="kilos">Kilos</label>-->
-<!--        </span>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--    <Chart type="line" :data="chartData" :options="chartOptions" :plugins="[verticalLine]" />-->
-<!--  </div>-->
+  <bike-gearing-graph v-if="state.display === 'Graph'" :gearingState="state" />
+  <bike-gearing-table v-if="state.display === 'Table'"  :gearingState="state" />
 </template>
 
 <script setup>
 import BikeGearingGraph from './BikeGearingGraph.vue';
+import BikeGearingTable from './BikeGearingTable.vue';
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-// import { verticalLine } from './VerticalLine';
-// import Chart from 'primevue/chart';
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
@@ -127,7 +115,8 @@ const state = reactive({
   bikeVal: null,
   bikeRimOptions: [],
   record: _.cloneDeep(emptyRecord),
-  rim: _.cloneDeep(emptyRim)
+  rim: _.cloneDeep(emptyRim),
+  display: 'Graph'
 });
 
 const rules = {
@@ -334,5 +323,16 @@ const handleSubmit = (isFormValid) => {
     margin-top: 20px;
     margin-right: 20px;
     text-align: center;
+  }
+  .radio-buttons-div {
+    float: right;
+    margin: 34px 0 0 0;
+  }
+  .radio-buttons {
+    display: inline;
+    margin-top: 20px;
+  }
+  .radio-buttons label {
+    margin-right: 20px;
   }
 </style>
