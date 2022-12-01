@@ -67,18 +67,20 @@
       <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear" />
       <div class="radio-buttons-div">
         <span class="field-radiobutton radio-buttons">
-          <RadioButton id="graph" inputId="graph" name="display" value="Graph" v-model="state.display" />
+          <RadioButton id="graph" inputId="graph" name="display" value="Graph"
+                       v-model="state.display" @change="refreshDisplay" />
           <label for="graph">Graph</label>
         </span>
           <span class="field-radiobutton radio-buttons">
-          <RadioButton id="table" inputId="table" name="display" value="Table" v-model="state.display" />
+          <RadioButton id="table" inputId="table" name="display" value="Table"
+                       v-model="state.display" @change="refreshDisplay" />
           <label for="table">Table</label>
         </span>
       </div>
     </form>
   </div>
-  <bike-gearing-graph v-if="state.display === 'Graph'" :gearingState="state" />
-  <bike-gearing-table v-if="state.display === 'Table'"  :gearingState="state" />
+  <bike-gearing-graph ref="gearingGraph" v-if="state.display === 'Graph'" :gearingState="state" :newID="NEW_ID" />
+  <bike-gearing-table ref="gearingTable" v-if="state.display === 'Table'"  :gearingState="state" :newID="NEW_ID" />
 </template>
 
 <script setup>
@@ -92,6 +94,8 @@ import _ from 'lodash';
 
 const axiosHelper = new AxiosHelper();
 const NEW_ID = 9999;
+const gearingGraph = ref(null);
+const gearingTable = ref(null);
 const messages = ref([]);
 const submitted = ref(false);
 const emptyRim = {
@@ -250,7 +254,6 @@ function bikeHandler(e) {
     }
   }
   rimHandler({ value: state.record.bikerimid });
-  // calcChartData();
 }
 
 const handleSubmit = (isFormValid) => {
@@ -263,58 +266,15 @@ const handleSubmit = (isFormValid) => {
   console.log("****** handleSubmit");
 }
 
-// const colors = ['#42A5F5', '#FFA726'];
-// const datas = [
-//   [65, 59, 80, 81, 56, 55, 40],
-//   [28, 48, 40, 19, 86, 27, 90]
-// ];
-
-// const calcChartData = () => {
-//   chartData.value = [];
-//   if(state.bikeVal !== null && state.bikeVal !== NEW_ID) {
-//     const r = state.rim.diameter;
-//     const t = state.record.tirewidth;
-//     const d = 3.13772 * (2 * t + r);
-//     const circumMeters = Math.round(d / 1000);
-//     const gears = state.record.chainrings;
-//     const cogs = state.record.cogs;
-//     const datasets = [];
-//     // vals.push({ x: cog, y: speedKilos });
-//     _.forEach(gears, (gear, idx) => {
-//       const vals = [];
-//       _.forEach(cogs, cog => {
-//         const speedMeters = circumMeters * (gear / cog) * state.cadence * 60;
-//         const speedKilos = speedMeters / 1000;
-//         let speed = speedKilos;
-//         if(state.measure === 'Miles') {
-//           speed = speedKilos * 0.621371;
-//         }
-//         vals.push({ x: speed.toFixed(2), y: cog });
-//       })
-//       datasets.push({
-//         label: `${gear} Teeth`,
-//         fill: false,
-//         borderColor: colors[idx],
-//         tension: .4,
-//         data: vals.reverse()
-//       });
-//     })
-//
-//     const min = _.minBy(datasets[0].data, it => it.x).x;
-//     const max = _.maxBy(datasets[datasets.length - 1].data, it => Math.round(it.x)).x;
-//     let count = min - min % 5;
-//     const labels = [String(count)];
-//     while(count < max) {
-//       labels.push(String(count += 5));
-//     }
-//     chartOptions.value.scales.x.count = cogs.length;
-//     chartOptions.value.scales.y.labels = cogs;
-//     chartData.value = {
-//       datasets: datasets
-//     }
-//   }
-// }
-
+const refreshDisplay = () => {
+  setTimeout(() => {
+    if(state.display === 'Graph') {
+      gearingGraph.value.calcChartData();
+    } else if(state.display === 'Table') {
+      gearingTable.value.calcData();
+    }
+  }, 200);
+}
 </script>
 
 <style scoped lang="css">

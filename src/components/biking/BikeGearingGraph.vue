@@ -28,13 +28,18 @@ import {watch, reactive, ref} from "vue";
 import { verticalLine } from './VerticalLine';
 import _ from "lodash";
 
-const NEW_ID = 9999;
+// const NEW_ID = 9999;
 const props = defineProps({
   gearingState: {
     type: Object,
     default: () => {}
+  },
+  newID: {
+    type: Number,
+    default: () => 99
   }
 });
+const NEW_ID = props.newID;
 const config = reactive({
   cadence: 70,
   measure: 'Miles'
@@ -88,7 +93,7 @@ const chartOptions = ref(
     }
 );
 const chartData = ref(null);
-const colors = ['#42A5F5', '#FFA726'];
+const colors = ['#42A5F5', '#FFA726', '#D7DBDD'];
 
 const state = reactive(props.gearingState);
 
@@ -141,4 +146,8 @@ const calcChartData = () => {
     }
   }
 }
+
+defineExpose({
+  calcChartData
+})
 </script>

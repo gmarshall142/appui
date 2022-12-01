@@ -46,6 +46,10 @@ watch(() => state.bikeVal, () => {
 });
 
 const calcData = () => {
-
+  console.log('calcData');
 }
+
+defineExpose({
+  calcData
+});
 </script>
