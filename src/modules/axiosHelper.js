@@ -17,14 +17,15 @@ export default class AxiosHelper {
     servicesStore = useServicesStore();
     userStore = useUserStore();
 
-    //AxiosHelper.axiosInstance = axiosInst;
+    AxiosHelper.axiosInstance = axiosInst;
     // AxiosHelper.appContext = context;
     AxiosHelper.defaultHeaders = servicesStore.serviceHeaders;
     AxiosHelper.serverUrl = servicesStore.serverUrl;
   };
 
   request = (config) => {
-    const axios = inject('axios');
+    // const axios = inject('axios');
+    const axios = AxiosHelper.axiosInstance;
 
     return new Promise(async (resolve, reject) => {
       config.withCredentials = true;
@@ -63,4 +64,42 @@ export default class AxiosHelper {
     });
   };
 
+  post = (url, data, headers = AxiosHelper.defaultHeaders) => {
+    const fullUrl = `${AxiosHelper.serverUrl}${url}`;
+    return this.request({
+      method: 'post',
+      url: fullUrl,
+      data: data,
+      withCredentials: true,
+      headers: headers
+    });
+  };
+
+  put = (url, data, headers = AxiosHelper.defaultHeaders) => {
+    const fullUrl = `${AxiosHelper.serverUrl}${url}`;
+    return this.request({
+      method: 'put',
+      url: fullUrl,
+      data: data,
+      withCredentials: true,
+      headers: headers
+    });
+  };
+
+  save = (url, data) => {
+    if(data.id) {
+      return this.put(`${url}/${data.id}`, data);
+    } else {
+      return this.post(url, data);
+    }
+    // const recordUrl = data.id ? `/${data.id}` : '';
+    // const fullUrl = `${AxiosHelper.serverUrl}${url}${recordUrl}`;
+    // return this.request({
+    //   method: (data.id ? 'put' : 'post'),
+    //   url: fullUrl,
+    //   data: data,
+    //   withCredentials: true,
+    //   headers: headers
+    // });
+  };
 }

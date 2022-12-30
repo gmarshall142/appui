@@ -1,23 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// import HomeView from '../views/HomeView.vue'
 import App from '../App.vue';
 import { createAuthGuard } from "@auth0/auth0-vue";
 
-// const routes = [
-//   {
-//     path: '/',
-//     name: 'home',
-//     component: HomeView
-//   },
-//   {
-//     path: '/about',
-//     name: 'about',
-//     // route level code-splitting
-//     // this generates a separate chunk (About.[hash].js) for this route
-//     // which is lazy-loaded when the route is visited.
-//     component: () => import('../views/AboutView.vue')
-//   }
-// ]
 const routes = [
   {
     path: '/',
@@ -25,19 +9,19 @@ const routes = [
     component: App,
     children: [
       {
+        path: '',
+        name: 'dashboard',
+        component: () => import('../components/Dashboard.vue')
+      },
+      {
         path: "/profile",
         name: "profile",
-        component: import('../views/Profile.vue'),
+        component: () => import('../views/Profile.vue'),
       },
       {
         path: "/bikegearing",
         name: "bikegearing",
-        component: import('../components/biking/BikeGearing.vue'),
-      },
-      {
-        path: '',
-        name: 'dashboard',
-        component: () => import('../components/Dashboard.vue')
+        component: () => import('../components/biking/BikeGearing.vue'),
       },
       {
         path: '/formlayout',

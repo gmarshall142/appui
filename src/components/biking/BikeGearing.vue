@@ -3,7 +3,8 @@
 		<h5>Bike Gearing</h5>
 
     <transition-group name="p-message" tag="div">
-      <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id">{{msg.content}}</Message>
+      <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id"
+               :sticky="msg.sticky" :life="3000">{{msg.content}}</Message>
     </transition-group>
 
     <form @submit.prevent="handleSubmit(!v$.$invalid)">
@@ -214,7 +215,7 @@ function fetchBikeRims() {
     });
 }
 
-function fetchBikes() {
+function fetchBikes(selectedId = null) {
   state.bikes = [];
   const options = [];
   axiosHelper.get('/bikes')
@@ -225,6 +226,9 @@ function fetchBikes() {
         options.push(itm);
       })
       state.bikeOptions = [ { name: 'New', id: NEW_ID }].concat(_.sortBy(options, 'name'));
+      if(selectedId) {
+        state.bikeVal = selectedId;
+      }
     })
     .catch((err) => {
       const msgId = messages.value.length + 1;
@@ -263,7 +267,35 @@ const handleSubmit = (isFormValid) => {
     return;
   }
 
+  if(typeof(state.record.cogs) === 'string') {
+    state.record.cogs = createArray(state.record.cogs);
+  }
+  if(typeof(state.record.chainrings) === 'string') {
+    state.record.chainrings = createArray(state.record.chainrings);
+  }
+
   console.log("****** handleSubmit");
+  const newRec = state.record.id === null;
+  axiosHelper.save('/bikes', state.record)
+    .then((response) => {
+      state.record = response.data;
+      showMessage('success', 'Resource saved.', false)
+      if(newRec) {
+        fetchBikes(state.record.id);
+      } else {
+        refreshDisplay();
+      }
+    })
+    .catch(() => {
+      showMessage('error', 'Save failed.')
+    });
+}
+
+const createArray = (str) => {
+  const arr = _.split(str, ',');
+  const newArr = [];
+  _.forEach(arr, it => newArr.push(Number(it)));
+  return newArr;
 }
 
 const refreshDisplay = () => {
@@ -274,6 +306,10 @@ const refreshDisplay = () => {
       gearingTable.value.calcData();
     }
   }, 200);
+}
+
+const showMessage = (level, msg, sticky=true) => {
+  messages.value.push({ severity: level, content: msg, id: messages.value.length + 1, sticky: sticky });
 }
 </script>
 
