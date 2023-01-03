@@ -63,18 +63,19 @@
           </span>
         </div>
       </div>
-      <!-- Save / Clear -->
-      <Button type="submit" label="Submit" class="button-bar p-button-sm" />
-      <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear" />
+      <!-- Save / Delete / Clear -->
+      <Button type="submit" label="Submit" class="button-bar p-button-sm"/>
+      <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear"/>
+      <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="handleDelete"/>
       <div class="radio-buttons-div">
         <span class="field-radiobutton radio-buttons">
           <RadioButton id="graph" inputId="graph" name="display" value="Graph"
-                       v-model="state.display" @change="refreshDisplay" />
+                       v-model="state.display" @change="refreshDisplay"/>
           <label for="graph">Graph</label>
         </span>
-          <span class="field-radiobutton radio-buttons">
+        <span class="field-radiobutton radio-buttons">
           <RadioButton id="table" inputId="table" name="display" value="Table"
-                       v-model="state.display" @change="refreshDisplay" />
+                       v-model="state.display" @change="refreshDisplay"/>
           <label for="table">Table</label>
         </span>
       </div>
@@ -136,55 +137,6 @@ const rules = {
   }
 };
 const v$ = useVuelidate(rules, state);
-// const chartOptions = ref(
-//     {
-//       indexAxis: 'y',
-//       plugins: {
-//         title: {
-//           display: true,
-//           text: 'Gearing Combinations'
-//         },
-//         legend: {
-//           labels: {
-//             color: '#495057'
-//           }
-//         },
-//         verticalLine: {
-//           dash: [2, 2],
-//           color: 'ltgray',
-//           width: 1
-//         }
-//       },
-//       scales: {
-//         x: {
-//           title: {
-//             text: 'Speed',
-//             display: true
-//           },
-//           ticks: {
-//             color: '#495057',
-//             stepSize: 5
-//           },
-//           grid: {
-//             color: '#ebedef'
-//           }
-//         },
-//         y: {
-//           title: {
-//             text: 'Cogs',
-//             display: true
-//           },
-//           ticks: {
-//             color: '#495057',
-//           },
-//           grid: {
-//             color: '#ebedef'
-//           }
-//         }
-//       },
-//     }
-// );
-// const chartData = ref(null);
 
 onMounted(() => {
   fetchBikeRims();
@@ -267,6 +219,8 @@ const handleSubmit = (isFormValid) => {
     return;
   }
 
+  messages.value = [];
+
   if(typeof(state.record.cogs) === 'string') {
     state.record.cogs = createArray(state.record.cogs);
   }
@@ -274,12 +228,11 @@ const handleSubmit = (isFormValid) => {
     state.record.chainrings = createArray(state.record.chainrings);
   }
 
-  console.log("****** handleSubmit");
   const newRec = state.record.id === null;
   axiosHelper.save('/bikes', state.record)
     .then((response) => {
       state.record = response.data;
-      showMessage('success', 'Resource saved.', false)
+      showMessage('success', 'Bike saved.', false)
       if(newRec) {
         fetchBikes(state.record.id);
       } else {
@@ -289,6 +242,24 @@ const handleSubmit = (isFormValid) => {
     .catch(() => {
       showMessage('error', 'Save failed.')
     });
+}
+
+const handleDelete = () => {
+  console.log("****** handleDelete");
+  messages.value = [];
+
+  // confirmation dialog
+
+  axiosHelper.delete(`/bikes/${state.record.id}`)
+      .then((response) => {
+        state.record = response.data;
+        showMessage('success', 'Bike deleted.', false)
+        fetchBikes(state.record.id);
+      })
+      .catch(() => {
+        showMessage('error', 'Delete failed.')
+      });
+
 }
 
 const createArray = (str) => {

@@ -92,14 +92,15 @@ export default class AxiosHelper {
     } else {
       return this.post(url, data);
     }
-    // const recordUrl = data.id ? `/${data.id}` : '';
-    // const fullUrl = `${AxiosHelper.serverUrl}${url}${recordUrl}`;
-    // return this.request({
-    //   method: (data.id ? 'put' : 'post'),
-    //   url: fullUrl,
-    //   data: data,
-    //   withCredentials: true,
-    //   headers: headers
-    // });
+  };
+
+  delete = (url, headers = AxiosHelper.defaultHeaders) => {
+    const fullUrl = `${AxiosHelper.serverUrl}${url}`;
+    return this.request({
+      method: 'delete',
+      url: fullUrl,
+      withCredentials: true,
+      headers: headers
+    });
   };
 }
