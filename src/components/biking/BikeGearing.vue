@@ -6,6 +6,8 @@
       <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id"
                :sticky="msg.sticky" :life="3000">{{msg.content}}</Message>
     </transition-group>
+    <ConfirmDialog></ConfirmDialog>
+    <Toast />
 
     <form @submit.prevent="handleSubmit(!v$.$invalid)">
       <div  class="grid p-fluid mt-3">
@@ -66,7 +68,7 @@
       <!-- Save / Delete / Clear -->
       <Button type="submit" label="Submit" class="button-bar p-button-sm"/>
       <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear"/>
-      <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="handleDelete"/>
+      <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDelete"/>
       <div class="radio-buttons-div">
         <span class="field-radiobutton radio-buttons">
           <RadioButton id="graph" inputId="graph" name="display" value="Graph"
@@ -91,6 +93,8 @@ import BikeGearingTable from './BikeGearingTable.vue';
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
@@ -114,6 +118,8 @@ const emptyRecord = {
   tirewidth: null,
   BikeRim: _.cloneDeep(emptyRim)
 };
+const confirm = useConfirm();
+const toast = useToast();
 
 const state = reactive({
   bikes: [],
@@ -245,15 +251,13 @@ const handleSubmit = (isFormValid) => {
 }
 
 const handleDelete = () => {
-  console.log("****** handleDelete");
   messages.value = [];
-
-  // confirmation dialog
 
   axiosHelper.delete(`/bikes/${state.record.id}`)
       .then((response) => {
         state.record = response.data;
         showMessage('success', 'Bike deleted.', false)
+        clear();
         fetchBikes(state.record.id);
       })
       .catch(() => {
@@ -281,6 +285,21 @@ const refreshDisplay = () => {
 
 const showMessage = (level, msg, sticky=true) => {
   messages.value.push({ severity: level, content: msg, id: messages.value.length + 1, sticky: sticky });
+}
+
+const confirmDelete = () => {
+  confirm.require({
+    message: 'Do you want to delete this record?',
+    header: 'Delete Confirmation',
+    icon: 'pi pi-info-circle',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      handleDelete();
+    },
+    reject: () => {
+      toast.add({severity:'error', summary:'Cancel', detail:'Delete canceled.', life: 3000});
+    }
+  });
 }
 </script>
 
