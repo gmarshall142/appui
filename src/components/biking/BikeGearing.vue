@@ -68,7 +68,7 @@
       <!-- Save / Delete / Clear -->
       <Button type="submit" label="Submit" class="button-bar p-button-sm"/>
       <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear"/>
-      <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDelete"/>
+      <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDeleteDlg"/>
       <div class="radio-buttons-div">
         <span class="field-radiobutton radio-buttons">
           <RadioButton id="graph" inputId="graph" name="display" value="Graph"
@@ -93,8 +93,8 @@ import BikeGearingTable from './BikeGearingTable.vue';
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import { deleteConfirm } from "../../modules/common/ConfirmDialogs";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
@@ -118,7 +118,7 @@ const emptyRecord = {
   tirewidth: null,
   BikeRim: _.cloneDeep(emptyRim)
 };
-const confirm = useConfirm();
+const { confirmDelete } = deleteConfirm();
 const toast = useToast();
 
 const state = reactive({
@@ -250,6 +250,10 @@ const handleSubmit = (isFormValid) => {
     });
 }
 
+const confirmDeleteDlg = () => {
+  confirmDelete('Do you want to delete this record?', 'Delete Confirmation', handleDelete, handleReject);
+}
+
 const handleDelete = () => {
   messages.value = [];
 
@@ -264,6 +268,10 @@ const handleDelete = () => {
         showMessage('error', 'Delete failed.')
       });
 
+}
+
+const handleReject = () => {
+  toast.add({severity:'error', summary:'Cancel', detail:'Delete canceled.', life: 3000});
 }
 
 const createArray = (str) => {
@@ -287,20 +295,6 @@ const showMessage = (level, msg, sticky=true) => {
   messages.value.push({ severity: level, content: msg, id: messages.value.length + 1, sticky: sticky });
 }
 
-const confirmDelete = () => {
-  confirm.require({
-    message: 'Do you want to delete this record?',
-    header: 'Delete Confirmation',
-    icon: 'pi pi-info-circle',
-    acceptClass: 'p-button-danger',
-    accept: () => {
-      handleDelete();
-    },
-    reject: () => {
-      toast.add({severity:'error', summary:'Cancel', detail:'Delete canceled.', life: 3000});
-    }
-  });
-}
 </script>
 
 <style scoped lang="css">
