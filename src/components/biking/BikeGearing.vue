@@ -94,7 +94,8 @@ import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import { useToast } from "primevue/usetoast";
-import { deleteConfirm } from "../../modules/common/ConfirmDialogs";
+import { useDeleteConfirm } from "../../modules/common/ConfirmDialogs";
+import { useMessages } from "../../modules/common/Messages";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
@@ -102,7 +103,6 @@ const axiosHelper = new AxiosHelper();
 const NEW_ID = 9999;
 const gearingGraph = ref(null);
 const gearingTable = ref(null);
-const messages = ref([]);
 const submitted = ref(false);
 const emptyRim = {
   id: null,
@@ -118,7 +118,8 @@ const emptyRecord = {
   tirewidth: null,
   BikeRim: _.cloneDeep(emptyRim)
 };
-const { confirmDelete } = deleteConfirm();
+const { confirmDelete } = useDeleteConfirm();
+const { messages, clearMessages, showMessage } = useMessages();
 const toast = useToast();
 
 const state = reactive({
@@ -155,7 +156,7 @@ const bikeClass = computed(() => {
 })
 
 function clear() {
-  messages.value = [];
+  clearMessages();
   state.bikeVal = null;
   bikeHandler({ value: null });
 }
@@ -167,9 +168,7 @@ function fetchBikeRims() {
       state.bikeRimOptions = response.data;
     })
     .catch((err) => {
-      const msgId = messages.value.length + 1;
-      const msg = `Bike Rims ${err.message}`;
-      messages.value.push({ severity: 'error', content: msg, id: msgId });
+      showMessage('error', `Bike Rims ${err.message}`);
     });
 }
 
@@ -189,9 +188,7 @@ function fetchBikes(selectedId = null) {
       }
     })
     .catch((err) => {
-      const msgId = messages.value.length + 1;
-      const msg = `Bikes ${err.message}`;
-      messages.value.push({ severity: 'error', content: msg, id: msgId });
+      showMessage('error', `Bikes ${err.message}`);
     });
 }
 
@@ -225,7 +222,7 @@ const handleSubmit = (isFormValid) => {
     return;
   }
 
-  messages.value = [];
+  clearMessages();
 
   if(typeof(state.record.cogs) === 'string') {
     state.record.cogs = createArray(state.record.cogs);
@@ -255,13 +252,13 @@ const confirmDeleteDlg = () => {
 }
 
 const handleDelete = () => {
-  messages.value = [];
+  clearMessages();
 
   axiosHelper.delete(`/bikes/${state.record.id}`)
       .then((response) => {
         state.record = response.data;
-        showMessage('success', 'Bike deleted.', false)
         clear();
+        showMessage('success', 'Bike deleted.', false)
         fetchBikes(state.record.id);
       })
       .catch(() => {
@@ -290,11 +287,6 @@ const refreshDisplay = () => {
     }
   }, 200);
 }
-
-const showMessage = (level, msg, sticky=true) => {
-  messages.value.push({ severity: level, content: msg, id: messages.value.length + 1, sticky: sticky });
-}
-
 </script>
 
 <style scoped lang="css">

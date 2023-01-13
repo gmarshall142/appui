@@ -1,6 +1,6 @@
 import { useConfirm } from "primevue/useconfirm";
 
-export function deleteConfirm() {
+export function useDeleteConfirm() {
   const confirm = useConfirm();
 
   const confirmDelete = (msg, hdr, handleDelete, handleReject) => {
