@@ -71,17 +71,23 @@
         </div>
         <div class="field col-12 md:col-6">
           <span class="p-float-label">
+            <Chips id="directors" v-model="state.record.directors" />
+            <label for="directors">Directors</label>
+          </span>
+        </div>
+        <!-- Genres -->
+        <div class="field col-12 md:col-6">
+          <span class="p-float-label">
             <Chips id="genres" v-model="state.record.genres" />
             <label for="genres">Genres</label>
           </span>
         </div>
       </div>
+      <div class="field col-12 md:col-6" />
       <!-- Save / Delete / Clear -->
       <Button type="submit" label="Submit" class="button-bar p-button-sm"/>
       <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear"/>
       <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDeleteDlg"/>
-      <div class="radio-buttons-div">
-      </div>
     </form>
   </div>
   <div class="card">
@@ -135,7 +141,8 @@ const emptyRecord = {
   genres: [],
   plot: '',
   actors: [],
-  videoformatid: 0
+  directors: [],
+  videoformatid: null
 };
 const { confirmDelete } = useDeleteConfirm();
 const { messages, clearMessages, showMessage } = useMessages();
@@ -165,20 +172,18 @@ onMounted(() => {
 function clear() {
   clearMessages();
   state.record = _.cloneDeep(emptyRecord);
-  // state.bikeVal = null;
-  // bikeHandler({ value: null });
 }
 
 const imageWidth = computed(() => {
-  return modImageSize ? state.record.imagewidth * .4 : state.record.imagewidth;
+  return state.record.imagewidth * getImageMod();
 })
 
 const imageHeight = computed(() => {
-  return modImageSize ? state.record.imageheight * .4 : state.record.imageheight;
+  return state.record.imageheight * getImageMod();
 })
 
-function modImageSize() {
-  return state.record.imagewidth > 400 || state.record.imageheight > 600;
+function getImageMod() {
+  return 600 / state.record.imageheight;
 }
 
 
@@ -248,6 +253,7 @@ function imdbHandler() {
       rec.runtime = data.runtime;
       rec.actors = data.actors;
       rec.genres = data.genres;
+      rec.directors = data.directors;
       rec.plot = data.plot;
     })
     .catch((err) => {
