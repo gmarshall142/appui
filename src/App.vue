@@ -66,6 +66,12 @@ const menu = [
     }]
   },
   {
+    label: 'Media',
+    items: [{
+      label: 'DVDs', icon: 'fa-solid fa-person-biking', to: '/videomaint'
+    }]
+  },
+  {
     label: 'UI Components', icon: 'pi pi-fw pi-sitemap',
     items: [
       {label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/formlayout'},

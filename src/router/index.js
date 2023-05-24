@@ -24,6 +24,11 @@ const routes = [
         component: () => import('../components/biking/BikeGearing.vue'),
       },
       {
+        path: "/videomaint",
+        name: "videomaint",
+        component: () => import('../components/media/VideoMaint.vue'),
+      },
+      {
         path: '/formlayout',
         name: 'formlayout',
         component: () => import('../components/FormLayoutDemo.vue')
