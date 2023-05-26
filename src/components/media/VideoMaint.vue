@@ -7,6 +7,16 @@
                :sticky="msg.sticky" :life="3000">{{msg.content}}</Message>
     </transition-group>
     <ConfirmDialog></ConfirmDialog>
+    <Dialog v-model:visible="state.listDlg.visible" modal header="Multiple Records" :style="{ width: '50vw' }">
+      <Listbox v-model="state.listDlg.selected" :options="state.listDlg.records" optionLabel="title"
+               class="p-invalid" aria-describedby="text-error"/>
+      <div v-if="state.listDlg.error" style="text-align: center">
+        <small id="text-error" class="p-error">{{ listErrorMessage || '&nbsp;' }}</small>
+      </div>
+      <div style="text-align: center; margin-top: 20px">
+        <Button type="button" label="Edit" @click="editHandler"/>
+      </div>
+    </Dialog>
     <Toast />
 
     <form @submit.prevent="handleSubmit(!v$.$invalid)">
@@ -20,7 +30,7 @@
           </span>
         </div>
         <div class="field col-12 md:col-1">
-          <Button type="button" label="Search" class="p-button-sm p-button-secondary" @click=""/>
+          <Button type="button" label="Search" class="p-button-sm p-button-secondary" @click="searchHandler"/>
         </div>
         <div class="field col-12 md:col-1" />
         <div class="field col-12 md:col-2">
@@ -90,7 +100,7 @@
       <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDeleteDlg"/>
     </form>
   </div>
-  <div class="card">
+  <div class="card" v-if="displayImage">
     <h5>IMDB Image</h5>
     <div class="grid p-fluid mt-3">
       <div class="field col-12 md:col-6">
@@ -102,8 +112,7 @@
         <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;"
              :src="state.record.imageurl"
              :width="imageWidth"
-             :height="imageHeight">
-
+             :height="imageHeight" alt="" />
       </div>
     </div>
   </div>
@@ -120,15 +129,13 @@ import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
 const axiosHelper = new AxiosHelper();
-const NEW_ID = 9999;
-const gearingGraph = ref(null);
-const gearingTable = ref(null);
+const listErrorMessage = "Select record to edit."
 const submitted = ref(false);
-const emptyRim = {
-  id: null,
-  name: '',
-  description: '',
-  diameter: null
+const emptyListDlg = {
+  visible: false,
+  selected: null,
+  records: [],
+  error: false
 }
 const emptyRecord = {
   id: null,
@@ -150,8 +157,8 @@ const toast = useToast();
 
 const state = reactive({
   record: _.cloneDeep(emptyRecord),
-  videoformats: []
-  // displayImage: state.record.imageurl != null
+  videoformats: [],
+  listDlg: _.cloneDeep(emptyListDlg),
 });
 
 const rules = {
@@ -166,12 +173,12 @@ const v$ = useVuelidate(rules, state);
 
 onMounted(() => {
   fetchVideoFormats();
-  // fetchBikes();
 });
 
 function clear() {
   clearMessages();
   state.record = _.cloneDeep(emptyRecord);
+  state.listDlg = _.cloneDeep(emptyListDlg);
 }
 
 const imageWidth = computed(() => {
@@ -182,10 +189,13 @@ const imageHeight = computed(() => {
   return state.record.imageheight * getImageMod();
 })
 
+const displayImage = computed(() => {
+  return state.record.imageurl != null;
+})
+
 function getImageMod() {
   return 600 / state.record.imageheight;
 }
-
 
 function fetchVideoFormats() {
   state.videoformats = [];
@@ -198,67 +208,58 @@ function fetchVideoFormats() {
     });
 }
 
-// function fetchBikes(selectedId = null) {
-//   state.bikes = [];
-//   const options = [];
-//   axiosHelper.get('/bikes')
-//     .then((response) => {
-//       state.bikes = response.data;
-//       _.forEach(state.bikes, it => {
-//         const itm = { name: it.name, id: it.id };
-//         options.push(itm);
-//       })
-//       state.bikeOptions = [ { name: 'New', id: NEW_ID }].concat(_.sortBy(options, 'name'));
-//       if(selectedId) {
-//         state.bikeVal = selectedId;
-//       }
-//     })
-//     .catch((err) => {
-//       showMessage('error', `Bikes ${err.message}`);
-//     });
-// }
-
-function rimHandler(e) {
-  if(e.value !== state.bikeRimOptions.id) {
-    state.rim = _.cloneDeep(emptyRim);
-    const fnd = _.find(state.bikeRimOptions, it => it.id === e.value);
-    if(fnd) {
-      state.rim = fnd;
-    }
-  }
-}
-
-function bikeHandler(e) {
-  const val = e.value;
-  if(val === null || val === NEW_ID) {
-    state.record = _.cloneDeep(emptyRecord);
-  } else if(val !== state.record.id) {
-    const fnd = _.find(state.bikes, it => it.id === val);
-    if(fnd) {
-      state.record = fnd;
-    }
-  }
-}
-
 function imdbHandler() {
   axiosHelper.get(`/video/moviesdb/${state.record.imdbid}`)
     .then((response) => {
-      console.log(JSON.stringify(response.data));
-      const rec = state.record;
-      const data = response.data;
-      rec.title = data.name;
-      rec.imageurl = data.imageurl;
-      rec.imagewidth = data.imagewidth;
-      rec.imageheight = data.imageheight;
-      rec.runtime = data.runtime;
-      rec.actors = data.actors;
-      rec.genres = data.genres;
-      rec.directors = data.directors;
-      rec.plot = data.plot;
+      loadRecord(response.data, "imdb");
     })
     .catch((err) => {
       showMessage('error', `IMDB fetch ${err.message}`);
     });
+}
+
+function searchHandler() {
+  axiosHelper.get(`/video/title/${state.record.title}`)
+      .then((response) => {
+        if(response.data && response.data.length === 1) {
+          loadRecord(response.data[0])
+        } else if(response.data.length > 1) {
+          state.listDlg.records = response.data;
+          state.listDlg.visible = true;
+        }
+      })
+      .catch((err) => {
+        showMessage('error', `Search ${err.message}`);
+      });
+}
+
+function editHandler() {
+  if(!state.listDlg.selected) {
+    state.listDlg.error = true;
+  } else {
+    loadRecord(state.listDlg.selected);
+    state.listDlg = _.cloneDeep(emptyListDlg);
+  }
+}
+
+function loadRecord(data, from) {
+  const rec = state.record;
+  rec.imageurl = data.imageurl;
+  rec.imagewidth = data.imagewidth;
+  rec.imageheight = data.imageheight;
+  rec.runtime = data.runtime;
+  rec.actors = data.actors;
+  rec.genres = data.genres;
+  rec.directors = data.directors;
+  rec.plot = data.plot;
+  if(from === 'imdb') {
+    rec.title = data.title;
+  } else {
+    rec.id = data.id;
+    rec.title = data.title.replaceAll('&#39;', '\'');
+    rec.videoformatid = data.videoformatid;
+    rec.imdbid = data.imdbid;
+  }
 }
 
 const handleSubmit = (isFormValid) => {
@@ -271,14 +272,16 @@ const handleSubmit = (isFormValid) => {
   clearMessages();
 
   const newRec = state.record.id === null;
-  axiosHelper.save('/bikes', state.record)
+  axiosHelper.save('/video', state.record)
     .then((response) => {
       state.record = response.data;
-      showMessage('success', 'Bike saved.', false)
+      clear();
       if(newRec) {
+        showMessage('success', 'Video created.', false);
         // fetchBikes(state.record.id);
       } else {
-        refreshDisplay();
+        showMessage('success', 'Video updated.', false);
+        // refreshDisplay();
       }
     })
     .catch(() => {
@@ -293,12 +296,11 @@ const confirmDeleteDlg = () => {
 const handleDelete = () => {
   clearMessages();
 
-  axiosHelper.delete(`/bikes/${state.record.id}`)
+  axiosHelper.delete(`/video/${state.record.id}`)
       .then((response) => {
         state.record = response.data;
         clear();
-        showMessage('success', 'Bike deleted.', false)
-        // fetchBikes(state.record.id);
+        showMessage('success', 'Video deleted.', false)
       })
       .catch(() => {
         showMessage('error', 'Delete failed.')
@@ -308,23 +310,6 @@ const handleDelete = () => {
 
 const handleReject = () => {
   toast.add({severity:'error', summary:'Cancel', detail:'Delete canceled.', life: 3000});
-}
-
-const createArray = (str) => {
-  const arr = _.split(str, ',');
-  const newArr = [];
-  _.forEach(arr, it => newArr.push(Number(it)));
-  return newArr;
-}
-
-const refreshDisplay = () => {
-  setTimeout(() => {
-    if(state.display === 'Graph') {
-      gearingGraph.value.calcChartData();
-    } else if(state.display === 'Table') {
-      gearingTable.value.calcData();
-    }
-  }, 200);
 }
 </script>
 
