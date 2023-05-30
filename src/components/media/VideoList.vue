@@ -1,6 +1,6 @@
 <template>
 	<div class="card">
-		<h5>Video Maintenance</h5>
+		<h5>Video List</h5>
 
     <transition-group name="p-message" tag="div">
       <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id"
@@ -19,106 +19,70 @@
     </Dialog>
     <Toast />
 
-    <form @submit.prevent="handleSubmit(!v$.$invalid)">
-      <div  class="grid p-fluid mt-3">
-        <!-- Title / Find Button / Format / ID -->
-        <div class="field col-12 md:col-6">
-          <span class="p-float-label">
-            <InputText type="text" id="title" v-model="state.record.title"
-                       :class="{'p-invalid':v$.record.title.$invalid && submitted}" />
-            <label for="title" :class="{'p-error':v$.record.title.$invalid && submitted}">Title*</label>
+    <DataTable :value="state.videos" class="p-datatable-small p-datatable-gridlines" tableStyle="min-width: 50rem"
+               :paginator="true" :rows="20" dataKey="id" :rowHover="true" removableSort
+               v-model:filters="filters" filterDisplay="menu"
+               :globalFilterFields="['title', 'VideoFormat.name', 'directors', 'genres', 'acqtors']"
+    >
+      <template #header>
+        <div class="flex justify-content-between flex-column sm:flex-row">
+          <Button type="button" icon="pi pi-filter-slash" label="Clear" class="p-button-outlined mb-2"
+                  @click="clearFilter"/>
+          <span class="p-input-icon-left mb-2">
+            <i class="pi pi-search"/>
+            <InputText v-model="filters['global'].value" placeholder="Keyword Search" style="width: 100%"/>
           </span>
         </div>
-        <div class="field col-12 md:col-1">
-          <Button type="button" label="Search" class="p-button-sm p-button-secondary" @click="handleSearch"/>
-        </div>
-        <div class="field col-12 md:col-1" />
-        <div class="field col-12 md:col-2">
-          <span class="p-float-label">
-            <Dropdown id="format" :options="state.videoformats" v-model="state.record.videoformatid" show-clear
-                      optionLabel="name" optionValue="id" @change=""
-                      :class="{'p-invalid':v$.record.videoformatid.$invalid && submitted}" />
-            <label for="format" :class="{'p-error':v$.record.videoformatid.$invalid && submitted}">Format*</label>
-          </span>
-        </div>
-        <div class="field col-12 md:col-1" />
-        <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
-        <!-- IMDB / Refresh Button / Runtime -->
-        <div class="field col-12 md:col-2">
-          <span class="p-float-label">
-            <InputText type="text" id="imdb" v-model="state.record.imdbid"
-                       :class="{'p-invalid':v$.record.imdbid.$invalid && submitted}" />
-            <label for="imdb" :class="{'p-error':v$.record.imdbid.$invalid && submitted}">IMDB ID</label>
-          </span>
-        </div>
-        <div class="field col-12 md:col-1">
-          <Button type="button" label="Refresh" class="p-button-sm p-button-secondary" @click="handleImdb"/>
-        </div>
-        <div class="field col-12 md:col-4" />
-        <div class="field col-12 md:col-1">Runtime</div>
-        <div class="field col-12 md:col-2">
-          <span class="p-float-label">
-            <InputNumber id="runtime" v-model="state.record.runtime"
-                         :class="{'p-invalid':v$.record.runtime.$invalid && submitted}" />
-            <label for="runtime" :class="{'p-error':v$.record.runtime.$invalid && submitted}">(sec)</label>
-          </span>
-        </div>
-        <div class="field col-12 md:col-1">Minutes:&nbsp;&nbsp;{{ state.record.runtime / 60 }}</div>
-        <div class="field col-12 md:col-1" />
-        <!-- Plot -->
-        <div class="field col-12 md:col-12">
-          <span class="p-float-label">
-            <Textarea id="plot" rows="3" v-model="state.record.plot" style="width: 100%"></Textarea>
-            <label for="plot">Plot</label>
-          </span>
-        </div>
-        <!-- Actors / Genres -->
-        <div class="field col-12 md:col-6">
-          <span class="p-float-label">
-            <Chips id="actors" v-model="state.record.actors" />
-            <label for="actors">Actors</label>
-          </span>
-        </div>
-        <div class="field col-12 md:col-6">
-          <span class="p-float-label">
-            <Chips id="directors" v-model="state.record.directors" />
-            <label for="directors">Directors</label>
-          </span>
-        </div>
-        <!-- Genres -->
-        <div class="field col-12 md:col-6">
-          <span class="p-float-label">
-            <Chips id="genres" v-model="state.record.genres" />
-            <label for="genres">Genres</label>
-          </span>
-        </div>
-      </div>
-      <div class="field col-12 md:col-6" />
-      <!-- Save / Delete / Clear -->
-      <Button type="submit" label="Submit" class="button-bar p-button-sm"/>
-      <Button type="button" label="Clear" class="button-bar p-button-sm p-button-secondary" @click="clear"/>
-      <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDeleteDlg"/>
-    </form>
-  </div>
-  <div class="card" v-if="displayImage">
-    <h5>IMDB Image</h5>
-    <div class="grid p-fluid mt-3">
-      <div class="field col-12 md:col-6">
-        <div class="field col-12 md:col-1">URL:&nbsp;&nbsp;{{ state.record.imageurl }}</div>
-        <div class="field col-12 md:col-1">Width:&nbsp;&nbsp;{{ state.record.imagewidth }}</div>
-        <div class="field col-12 md:col-1">Height:&nbsp;&nbsp;{{ state.record.imageheight }}</div>
-      </div>
-      <div class="field col-12 md:col-6">
-        <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;"
-             :src="state.record.imageurl"
-             :width="imageWidth"
-             :height="imageHeight" alt="" />
-      </div>
-    </div>
+      </template>
+      <Column field="id" header="ID" sortable/>
+      <Column field="title" header="Title" sortable>
+        <template #body="{ data }">
+          {{ data.title }}
+        </template>
+        <template #filter="{ filterModel, filterCallback }">
+          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by title" />
+        </template>
+      </Column>
+      <Column field="VideoFormat.name" header="Format" :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
+        <template #body="{ data }">
+          {{ data.VideoFormat.name }}
+        </template>
+        <template #filter="{ filterModel }">
+          <Dropdown v-model="filterModel.value" :options="state.videoformats" optionLabel="name" optionValue="name"
+                    placeholder="Select One" class="p-column-filter" showClear>
+          </Dropdown>
+        </template>
+      </Column>
+      <Column field="directors" header="Directors">
+        <template #body="{data}">
+          {{makeStr(data.directors)}}
+        </template>
+        <template #filter="{ filterModel, filterCallback }">
+          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
+        </template>
+      </Column>
+      <Column field="genres" header="Genres">
+        <template #body="{data}">
+          {{makeStr(data.genres)}}
+        </template>
+        <template #filter="{ filterModel, filterCallback }">
+          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
+        </template>
+      </Column>
+      <Column field="actors" header="Actors">
+        <template #body="{data}">
+          {{makeStr(data.actors)}}
+        </template>
+        <template #filter="{ filterModel, filterCallback }">
+          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>
 
 <script setup>
+import { FilterMatchMode, FilterOperator } from 'primevue/api';
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
@@ -154,11 +118,13 @@ const emptyRecord = {
 const { confirmDelete } = useDeleteConfirm();
 const { messages, clearMessages, showMessage } = useMessages();
 const toast = useToast();
+const filters = ref();
 
 const state = reactive({
   record: _.cloneDeep(emptyRecord),
   videoformats: [],
   listDlg: _.cloneDeep(emptyListDlg),
+  videos: [],
 });
 
 const rules = {
@@ -173,12 +139,14 @@ const v$ = useVuelidate(rules, state);
 
 onMounted(() => {
   fetchVideoFormats();
+  fetchVideos();
 });
 
 function clear() {
   clearMessages();
   state.record = _.cloneDeep(emptyRecord);
   state.listDlg = _.cloneDeep(emptyListDlg);
+  state.videos = [];
 }
 
 const imageWidth = computed(() => {
@@ -197,24 +165,30 @@ function getImageMod() {
   return 600 / state.record.imageheight;
 }
 
+const makeStr = (arr) => {
+  return arr ? arr.toString() : null;
+}
 function fetchVideoFormats() {
   state.videoformats = [];
   axiosHelper.get('/video/formats')
-    .then((response) => {
-      state.videoformats = response.data;
-    })
-    .catch((err) => {
-      showMessage('error', `Video Formats ${err.message}`);
-    });
+      .then((response) => {
+        state.videoformats = response.data;
+      })
+      .catch((err) => {
+        showMessage('error', `Video Formats ${err.message}`);
+      });
 }
 
-function handleImdb() {
-  axiosHelper.get(`/video/moviesdb/${state.record.imdbid}`)
+function fetchVideos() {
+  state.videos = [];
+  axiosHelper.get('/video')
     .then((response) => {
-      loadRecord(response.data, "imdb");
+      state.videos = response.data;
+      _.forEach(state.videos, it => it.title = it.title.replaceAll('&#39;', '\'').trim());
+      state.videos = _.sortBy(state.videos, ['title']);
     })
     .catch((err) => {
-      showMessage('error', `IMDB fetch ${err.message}`);
+      showMessage('error', `Videos ${err.message}`);
     });
 }
 
@@ -339,6 +313,29 @@ function loadRecord(data, from) {
     rec.imdbid = data.imdbid;
   }
 }
+
+const initFilters = () => {
+  filters.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    title: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    'VideoFormat.name': { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+    directors: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+    genres: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
+    actors: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] }
+  };
+};
+// 'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+// representative: { value: null, matchMode: FilterMatchMode.IN },
+// date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+// balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+// activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
+// verified: { value: null, matchMode: FilterMatchMode.EQUALS }
+
+initFilters();
+
+const clearFilter = () => {
+  initFilters();
+};
 
 </script>
 

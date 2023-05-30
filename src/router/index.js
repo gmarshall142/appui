@@ -29,6 +29,11 @@ const routes = [
         component: () => import('../components/media/VideoMaint.vue'),
       },
       {
+        path: "/videolist",
+        name: "videolist",
+        component: () => import('../components/media/VideoList.vue'),
+      },
+      {
         path: '/formlayout',
         name: 'formlayout',
         component: () => import('../components/FormLayoutDemo.vue')

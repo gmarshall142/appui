@@ -104,7 +104,7 @@ import "highlight.js/styles/github.css";
 import Vue3HighlightJS from "vue3-highlightjs";
 import { library, dom } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { faPersonBiking } from "@fortawesome/free-solid-svg-icons";
+import { faPersonBiking, faVideo, faFilm } from "@fortawesome/free-solid-svg-icons";
 import axios from 'axios';
 import VueAxios from 'vue-axios';
 
@@ -113,7 +113,7 @@ import BlockViewer from "./BlockViewer.vue";
 
 // import "./assets/main.css";
 
-library.add(faPersonBiking);
+library.add(faPersonBiking, faVideo, faFilm);
 dom.watch();
 
 router.beforeEach(function (to, from, next) {

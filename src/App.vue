@@ -61,15 +61,16 @@ const menu = [
   },
   {
     label: 'Bikes',
-    items: [{
-      label: 'Bike Gearing', icon: 'fa-solid fa-person-biking', to: '/bikegearing'
-    }]
+    items: [
+      { label: 'Bike Gearing', icon: 'fa-solid fa-person-biking', to: '/bikegearing' },
+    ]
   },
   {
     label: 'Media',
-    items: [{
-      label: 'DVDs', icon: 'fa-solid fa-person-biking', to: '/videomaint'
-    }]
+    items: [
+      { label: 'Video Maintenance', icon: 'fa-solid fa-video', to: '/videomaint' },
+      { label: 'Video List', icon: 'fa-solid fa-film', to: '/videolist' }
+    ]
   },
   {
     label: 'UI Components', icon: 'pi pi-fw pi-sitemap',
