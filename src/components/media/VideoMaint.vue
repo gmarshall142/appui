@@ -119,6 +119,7 @@
 </template>
 
 <script setup>
+import { useEditRecordStore } from '@/stores/editRecord';
 import {computed, onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
@@ -127,6 +128,9 @@ import { useDeleteConfirm } from "../../modules/common/ConfirmDialogs";
 import { useMessages } from "../../modules/common/Messages";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
+
+const PATH = '/videomaint';
+const editRecordStore = useEditRecordStore();
 
 const axiosHelper = new AxiosHelper();
 const listErrorMessage = "Select record to edit."
@@ -173,6 +177,13 @@ const v$ = useVuelidate(rules, state);
 
 onMounted(() => {
   fetchVideoFormats();
+  const editRecords = editRecordStore.records;
+  //alert(`edit record: ${JSON.stringify(editRecords[PATH])}`)
+  const editRec = editRecords[PATH];
+  editRecordStore.clear(PATH);
+  if(editRec) {
+    loadRecord(editRec);
+  }
 });
 
 function clear() {

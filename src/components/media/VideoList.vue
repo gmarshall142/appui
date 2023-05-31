@@ -80,7 +80,13 @@
           <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
         </template>
       </Column>
-      <Column :rowEditor="true" style="min-width: 8rem" bodyStyle="text-align:center"></Column>
+<!--      <Column :rowEditor="true" style="min-width: 8rem" bodyStyle="text-align:center"></Column>-->
+      <Column headerStyle="min-width:4rem;" bodyStyle="text-align:center">
+        <template #body="slotProps">
+          <Button icon="pi pi-pencil" class="p-button-rounded p-button-text mr-2 mb-2"
+                  @click="handleEdit(slotProps.data)" aria-label="Edit" />
+        </template>
+      </Column>
       <template #expansion="slotProps">
         <div class="p-3">
           <span><b>Runtime:</b>&nbsp;&nbsp;<span>{{ slotProps.data.runtime / 60}}</span>&nbsp;&nbsp;Minutes</span>
@@ -92,19 +98,22 @@
 </template>
 
 <script setup>
+import { useEditRecordStore } from '@/stores/editRecord';
+import { useRouter } from 'vue-router';
 import { FilterMatchMode, FilterOperator } from 'primevue/api';
-import {computed, onMounted, reactive, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import { useToast } from "primevue/usetoast";
-import { useDeleteConfirm } from "../../modules/common/ConfirmDialogs";
 import { useMessages } from "../../modules/common/Messages";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
+const EDIT_PATH = '/videomaint';
+const editRecordStore = useEditRecordStore();
+
 const axiosHelper = new AxiosHelper();
 const listErrorMessage = "Select record to edit."
-const submitted = ref(false);
 const emptyListDlg = {
   visible: false,
   selected: null,
@@ -125,7 +134,6 @@ const emptyRecord = {
   directors: [],
   videoformatid: null
 };
-const { confirmDelete } = useDeleteConfirm();
 const { messages, clearMessages, showMessage } = useMessages();
 const toast = useToast();
 const filters = ref();
@@ -136,6 +144,7 @@ const state = reactive({
   videoformats: [],
   listDlg: _.cloneDeep(emptyListDlg),
   videos: [],
+  router: useRouter(),
 });
 
 const rules = {
@@ -192,7 +201,7 @@ function fetchVideos() {
     });
 }
 
-function handleBtnClick() {
+const handleBtnClick = () => {
   if(state.listDlg.button === "Create New") {
     return saveRecord();
   }
@@ -205,6 +214,11 @@ function handleBtnClick() {
   }
 }
 
+const handleEdit = (itm) => {
+ //alert(JSON.stringify(itm))
+  editRecordStore.create(EDIT_PATH, itm);
+  state.router.push('/videomaint');
+}
 const saveRecord = () => {
   clearMessages();
 
