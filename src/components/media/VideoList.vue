@@ -20,9 +20,10 @@
     <Toast />
 
     <DataTable :value="state.videos" class="p-datatable-small p-datatable-gridlines" tableStyle="min-width: 50rem"
-               :paginator="true" :rows="20" dataKey="id" :rowHover="true" removableSort
+               :paginator="true" :rows="20" dataKey="id" :rowHover="true" removableSort editMode="row"
                v-model:filters="filters" filterDisplay="menu"
-               :globalFilterFields="['title', 'VideoFormat.name', 'directors', 'genres', 'acqtors']"
+               :globalFilterFields="['title', 'VideoFormat.name', 'directors', 'genres', 'actors']"
+               v-model:expandedRows="expandedRows" @rowExpand="onRowExpand" @rowCollapse="onRowCollapse"
     >
       <template #header>
         <div class="flex justify-content-between flex-column sm:flex-row">
@@ -34,6 +35,7 @@
           </span>
         </div>
       </template>
+      <Column expander style="width: 5rem" />
       <Column field="id" header="ID" sortable/>
       <Column field="title" header="Title" sortable>
         <template #body="{ data }">
@@ -43,7 +45,8 @@
           <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by title" />
         </template>
       </Column>
-      <Column field="VideoFormat.name" header="Format" :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
+      <Column field="VideoFormat.name" header="Format"
+              :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem" sortable>
         <template #body="{ data }">
           {{ data.VideoFormat.name }}
         </template>
@@ -77,6 +80,13 @@
           <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
         </template>
       </Column>
+      <Column :rowEditor="true" style="min-width: 8rem" bodyStyle="text-align:center"></Column>
+      <template #expansion="slotProps">
+        <div class="p-3">
+          <span><b>Runtime:</b>&nbsp;&nbsp;<span>{{ slotProps.data.runtime / 60}}</span>&nbsp;&nbsp;Minutes</span>
+          <span style="margin-left: 40px;"><b>Plot:&nbsp;&nbsp;</b>{{ slotProps.data.plot }}</span>
+        </div>
+      </template>
     </DataTable>
   </div>
 </template>
@@ -119,6 +129,7 @@ const { confirmDelete } = useDeleteConfirm();
 const { messages, clearMessages, showMessage } = useMessages();
 const toast = useToast();
 const filters = ref();
+const expandedRows = ref([]);
 
 const state = reactive({
   record: _.cloneDeep(emptyRecord),
@@ -149,21 +160,10 @@ function clear() {
   state.videos = [];
 }
 
-const imageWidth = computed(() => {
-  return state.record.imagewidth * getImageMod();
-})
-
-const imageHeight = computed(() => {
-  return state.record.imageheight * getImageMod();
-})
-
-const displayImage = computed(() => {
-  return state.record.imageurl != null;
-})
-
-function getImageMod() {
-  return 600 / state.record.imageheight;
+const onRowExpand = (e) => {
+  _.remove(expandedRows.value, it => it.id !== e.data.id );
 }
+const onRowCollapse = () => {}
 
 const makeStr = (arr) => {
   return arr ? arr.toString() : null;
@@ -192,25 +192,6 @@ function fetchVideos() {
     });
 }
 
-function handleSearch() {
-  axiosHelper.get(`/video/title/${state.record.title}`)
-      .then((response) => {
-        if(response.data.length === 1) {
-          loadRecord(response.data[0])
-        } else if(response.data.length > 1) {
-          state.listDlg.records = response.data;
-          state.listDlg.header = "Multiple Records";
-          state.listDlg.button = "Edit"
-          state.listDlg.visible = true;
-        } else {
-          showMessage('warn', 'No results found.', false);
-        }
-      })
-      .catch((err) => {
-        showMessage('error', `Search ${err.message}`);
-      });
-}
-
 function handleBtnClick() {
   if(state.listDlg.button === "Create New") {
     return saveRecord();
@@ -221,34 +202,6 @@ function handleBtnClick() {
   } else {
     loadRecord(state.listDlg.selected);
     state.listDlg = _.cloneDeep(emptyListDlg);
-  }
-}
-
-const handleSubmit = (isFormValid) => {
-  submitted.value = true;
-
-  if (!isFormValid) {
-    return;
-  }
-
-  if(state.record.id === null) {
-    console.log('before submit');
-    axiosHelper.get(`/video/title/${state.record.title}`)
-        .then((response) => {
-          if(response.data.length > 0) {
-            state.listDlg.records = response.data;
-            state.listDlg.header = "Records with Title Exist";
-            state.listDlg.button = "Create New"
-            state.listDlg.visible = true;
-          } else {
-            saveRecord();
-          }
-        })
-        .catch(() => {
-          showMessage('error', `Search ${err.message}`);
-        });
-  } else {
-    saveRecord();
   }
 }
 
@@ -269,29 +222,6 @@ const saveRecord = () => {
       .catch(() => {
         showMessage('error', 'Save failed.')
       });
-}
-
-const confirmDeleteDlg = () => {
-  confirmDelete('Do you want to delete this record?', 'Delete Confirmation', handleDelete, handleReject);
-}
-
-const handleDelete = () => {
-  clearMessages();
-
-  axiosHelper.delete(`/video/${state.record.id}`)
-      .then((response) => {
-        state.record = response.data;
-        clear();
-        showMessage('success', 'Video deleted.', false)
-      })
-      .catch(() => {
-        showMessage('error', 'Delete failed.')
-      });
-
-}
-
-const handleReject = () => {
-  toast.add({severity:'error', summary:'Cancel', detail:'Delete canceled.', life: 3000});
 }
 
 function loadRecord(data, from) {
@@ -323,13 +253,8 @@ const initFilters = () => {
     genres: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
     actors: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] }
   };
+  expandedRows.value = [];
 };
-// 'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-// representative: { value: null, matchMode: FilterMatchMode.IN },
-// date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-// balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-// activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
-// verified: { value: null, matchMode: FilterMatchMode.EQUALS }
 
 initFilters();
 
