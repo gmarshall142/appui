@@ -186,7 +186,7 @@ onMounted(() => {
   }
 });
 
-function clear() {
+const clear = () => {
   clearMessages();
   state.record = _.cloneDeep(emptyRecord);
   state.listDlg = _.cloneDeep(emptyListDlg);
@@ -204,11 +204,11 @@ const displayImage = computed(() => {
   return state.record.imageurl != null;
 })
 
-function getImageMod() {
+const getImageMod = () => {
   return 600 / state.record.imageheight;
 }
 
-function fetchVideoFormats() {
+const fetchVideoFormats = () => {
   state.videoformats = [];
   axiosHelper.get('/video/formats')
     .then((response) => {
@@ -219,7 +219,7 @@ function fetchVideoFormats() {
     });
 }
 
-function handleImdb() {
+const handleImdb = () => {
   axiosHelper.get(`/video/moviesdb/${state.record.imdbid}`)
     .then((response) => {
       loadRecord(response.data, "imdb");
@@ -229,7 +229,7 @@ function handleImdb() {
     });
 }
 
-function handleSearch() {
+const handleSearch = () => {
   axiosHelper.get(`/video/title/${state.record.title}`)
       .then((response) => {
         if(response.data.length === 1) {
@@ -248,7 +248,7 @@ function handleSearch() {
       });
 }
 
-function handleBtnClick() {
+const handleBtnClick = () => {
   if(state.listDlg.button === "Create New") {
     return saveRecord();
   }
@@ -331,7 +331,7 @@ const handleReject = () => {
   toast.add({severity:'error', summary:'Cancel', detail:'Delete canceled.', life: 3000});
 }
 
-function loadRecord(data, from) {
+const loadRecord = (data, from) => {
   const rec = state.record;
   rec.imageurl = data.imageurl;
   rec.imagewidth = data.imagewidth;

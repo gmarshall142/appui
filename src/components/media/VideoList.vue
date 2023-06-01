@@ -6,17 +6,6 @@
       <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id"
                :sticky="msg.sticky" :life="3000">{{msg.content}}</Message>
     </transition-group>
-    <ConfirmDialog></ConfirmDialog>
-    <Dialog v-model:visible="state.listDlg.visible" modal :header="state.listDlg.header" :style="{ width: '50vw' }">
-      <Listbox v-model="state.listDlg.selected" :options="state.listDlg.records" optionLabel="title"
-               class="p-invalid" aria-describedby="text-error"/>
-      <div v-if="state.listDlg.error" style="text-align: center">
-        <small id="text-error" class="p-error">{{ listErrorMessage || '&nbsp;' }}</small>
-      </div>
-      <div style="text-align: center; margin-top: 20px">
-        <Button type="button" :label="state.listDlg.button" @click="handleBtnClick"/>
-      </div>
-    </Dialog>
     <Toast />
 
     <DataTable :value="state.videos" class="p-datatable-small p-datatable-gridlines" tableStyle="min-width: 50rem"
@@ -35,7 +24,7 @@
           </span>
         </div>
       </template>
-      <Column expander style="width: 5rem" />
+      <Column expander style="width: 2rem" />
       <Column field="id" header="ID" sortable/>
       <Column field="title" header="Title" sortable>
         <template #body="{ data }">
@@ -80,8 +69,7 @@
           <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
         </template>
       </Column>
-<!--      <Column :rowEditor="true" style="min-width: 8rem" bodyStyle="text-align:center"></Column>-->
-      <Column headerStyle="min-width:4rem;" bodyStyle="text-align:center">
+      <Column headerStyle="min-width:2rem;" bodyStyle="text-align:center">
         <template #body="slotProps">
           <Button icon="pi pi-pencil" class="p-button-rounded p-button-text mr-2 mb-2"
                   @click="handleEdit(slotProps.data)" aria-label="Edit" />
@@ -113,7 +101,6 @@ const EDIT_PATH = '/videomaint';
 const editRecordStore = useEditRecordStore();
 
 const axiosHelper = new AxiosHelper();
-const listErrorMessage = "Select record to edit."
 const emptyListDlg = {
   visible: false,
   selected: null,
@@ -162,13 +149,12 @@ onMounted(() => {
   fetchVideos();
 });
 
-function clear() {
+const clear = () => {
   clearMessages();
   state.record = _.cloneDeep(emptyRecord);
   state.listDlg = _.cloneDeep(emptyListDlg);
   state.videos = [];
 }
-
 const onRowExpand = (e) => {
   _.remove(expandedRows.value, it => it.id !== e.data.id );
 }
@@ -177,7 +163,8 @@ const onRowCollapse = () => {}
 const makeStr = (arr) => {
   return arr ? arr.toString() : null;
 }
-function fetchVideoFormats() {
+
+const fetchVideoFormats = () => {
   state.videoformats = [];
   axiosHelper.get('/video/formats')
       .then((response) => {
@@ -188,7 +175,7 @@ function fetchVideoFormats() {
       });
 }
 
-function fetchVideos() {
+const fetchVideos = () => {
   state.videos = [];
   axiosHelper.get('/video')
     .then((response) => {
@@ -201,24 +188,11 @@ function fetchVideos() {
     });
 }
 
-const handleBtnClick = () => {
-  if(state.listDlg.button === "Create New") {
-    return saveRecord();
-  }
-
-  if(!state.listDlg.selected) {
-    state.listDlg.error = true;
-  } else {
-    loadRecord(state.listDlg.selected);
-    state.listDlg = _.cloneDeep(emptyListDlg);
-  }
-}
-
 const handleEdit = (itm) => {
- //alert(JSON.stringify(itm))
   editRecordStore.create(EDIT_PATH, itm);
   state.router.push('/videomaint');
 }
+
 const saveRecord = () => {
   clearMessages();
 
@@ -236,26 +210,6 @@ const saveRecord = () => {
       .catch(() => {
         showMessage('error', 'Save failed.')
       });
-}
-
-function loadRecord(data, from) {
-  const rec = state.record;
-  rec.imageurl = data.imageurl;
-  rec.imagewidth = data.imagewidth;
-  rec.imageheight = data.imageheight;
-  rec.runtime = data.runtime;
-  rec.actors = data.actors;
-  rec.genres = data.genres;
-  rec.directors = data.directors;
-  rec.plot = data.plot;
-  if(from === 'imdb') {
-    rec.title = data.title;
-  } else {
-    rec.id = data.id;
-    rec.title = data.title.replaceAll('&#39;', '\'');
-    rec.videoformatid = data.videoformatid;
-    rec.imdbid = data.imdbid;
-  }
 }
 
 const initFilters = () => {
@@ -278,15 +232,5 @@ const clearFilter = () => {
 
 </script>
 
-
 <style scoped lang="css">
-  .button-bar {
-    width: 86px;
-    margin-top: 20px;
-    margin-right: 20px;
-    text-align: center;
-  }
-  .radio-buttons label {
-    margin-right: 20px;
-  }
 </style>
