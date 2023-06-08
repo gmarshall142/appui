@@ -24,6 +24,16 @@ const routes = [
         component: () => import('../components/biking/BikeGearing.vue'),
       },
       {
+        path: "/audiomaint",
+        name: "audiiomaint",
+        component: () => import('../components/media/AudioMaint.vue'),
+      },
+      {
+        path: "/audiolist",
+        name: "audiolist",
+        component: () => import('../components/media/AudioList.vue'),
+      },
+      {
         path: "/videomaint",
         name: "videomaint",
         component: () => import('../components/media/VideoMaint.vue'),
