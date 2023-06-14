@@ -80,18 +80,32 @@
             <label for="year" :class="{'p-error':v$.record.year.$invalid && submitted}">Year</label>
           </span>
         </div>
-        <!-- Artists / Genres -->
+        <!-- Artists / Genres / Sort Name -->
         <div class="field col-12 md:col-6">
+          <div class="field col-12 md:col-12">
+            <span class="p-float-label">
+              <Chips id="artists" v-model="state.record.artists" />
+              <label for="artists">Artists</label>
+            </span>
+          </div>
+          <div class="field col-12 md:col-12">
+            <span class="p-float-label">
+              <Chips id="genres" v-model="state.record.genres" />
+              <label for="genres">Genres</label>
+            </span>
+          </div>
+          <div class="field col-12 md:col-12">
           <span class="p-float-label">
-            <Chips id="artists" v-model="state.record.artists" />
-            <label for="artists">Artists</label>
+            <InputText type="text" id="sortname" v-model="state.record.sortname"
+                       :class="{'p-invalid':v$.record.sortname.$invalid && submitted}" />
+            <label for="sortname" :class="{'p-error':v$.record.sortname.$invalid && submitted}">Sort Name</label>
           </span>
+          </div>
         </div>
+        <!-- Thumbnail -->
         <div class="field col-12 md:col-6">
-          <span class="p-float-label">
-            <Chips id="genres" v-model="state.record.genres" />
-            <label for="genres">Genres</label>
-          </span>
+          <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;"
+               :src="state.record.imageurl" alt="" />
         </div>
       </div>
       <div class="field col-12 md:col-6" />
@@ -101,21 +115,35 @@
       <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDeleteDlg"/>
     </form>
   </div>
-  <div class="card" v-if="displayImage">
-    <h5>Discogs Image</h5>
-    <div class="grid p-fluid mt-3">
-      <div class="field col-12 md:col-7">
-        <div class="field col-12 md:col-12" style="overflow-wrap: anywhere"><b>URL:</b>&nbsp;&nbsp;{{ state.record.imageurl }}</div>
-        <div class="field col-12 md:col-1"><b>Width:</b>&nbsp;&nbsp;{{ state.record.imagewidth }}</div>
-        <div class="field col-12 md:col-1"><b>Height:</b>&nbsp;&nbsp;{{ state.record.imageheight }}</div>
-      </div>
-      <div class="field col-12 md:col-5">
-        <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;"
-             :src="state.record.imageurl"
-             :width="imageWidth"
-             :height="imageHeight" alt="" />
-      </div>
-    </div>
+<!--  <div class="card" v-if="displayImage">-->
+<!--    <h5>Discogs Image</h5>-->
+<!--    <div class="grid p-fluid mt-3">-->
+<!--      <div class="field col-12 md:col-7">-->
+<!--        <div class="field col-12 md:col-12" style="overflow-wrap: anywhere"><b>URL:</b>&nbsp;&nbsp;{{ state.record.imageurl }}</div>-->
+<!--        <div class="field col-12 md:col-1"><b>Width:</b>&nbsp;&nbsp;{{ state.record.imagewidth }}</div>-->
+<!--        <div class="field col-12 md:col-1"><b>Height:</b>&nbsp;&nbsp;{{ state.record.imageheight }}</div>-->
+<!--      </div>-->
+<!--      <div class="field col-12 md:col-5">-->
+<!--        <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;"-->
+<!--             :src="state.record.imageurl"-->
+<!--             :width="imageWidth"-->
+<!--             :height="imageHeight" alt="" />-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+  <div class="card" v-if="displayTracks">
+    <h5>Tracks</h5>
+    <DataTable ref="dt" :value="state.audioTracks" class="p-datatable-small p-datatable-gridlines"
+               :rows="20" dataKey="id" :rowHover="true" removableSort
+    >
+      <Column field="position" header="Position" />
+      <Column field="title" header="Title" />
+      <Column field="duration" header="Duration">
+        <template #body="{ data }">
+          {{ durationDisplay(data.duration) }}
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>
 
@@ -145,11 +173,10 @@ const emptyListDlg = {
 const emptyRecord = {
   id: null,
   title: '',
+  sortname: '',
   catno: '',
   barcode: '',
   imageurl: null,
-  imagewidth: null,
-  imageheight: null,
   genres: [],
   notes: '',
   artists: [],
@@ -163,6 +190,7 @@ const state = reactive({
   record: _.cloneDeep(emptyRecord),
   audioformats: [],
   listDlg: _.cloneDeep(emptyListDlg),
+  audioTracks: []
 });
 
 const rules = {
@@ -171,6 +199,7 @@ const rules = {
     barcode: { },
     year: { },
     title: { required },
+    sortname: { },
     audioformatid: { required }
   }
 };
@@ -190,26 +219,37 @@ const clear = () => {
   clearMessages();
   state.record = _.cloneDeep(emptyRecord);
   state.listDlg = _.cloneDeep(emptyListDlg);
+  state.audioTracks = [];
 }
 
-const imageWidth = computed(() => {
-  return state.record.imagewidth === 0 ? "" : state.record.imagewidth * getImageMod();
-})
-
-const imageHeight = computed(() => {
-  return state.record.imageheight === 0 ? "" : state.record.imageheight * getImageMod();
-})
+// const imageWidth = computed(() => {
+//   return state.record.imagewidth === 0 ? "" : state.record.imagewidth * getImageMod();
+// })
+//
+// const imageHeight = computed(() => {
+//   return state.record.imageheight === 0 ? "" : state.record.imageheight * getImageMod();
+// })
 
 const refreshDisabled = computed(() => {
   return state.record.catno === '' && state.record.barcode === '';
 })
 
-const displayImage = computed(() => {
-  return state.record.imageurl != null;
+// const displayImage = computed(() => {
+//   return state.record.imageurl != null;
+// })
+
+const displayTracks = computed(() => {
+  return state.audioTracks != null && state.audioTracks.length > 0;
 })
 
 const getImageMod = () => {
   return 600 / state.record.imageheight;
+}
+
+const durationDisplay = (time) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time - minutes * 60;
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 }
 
 const fetchAudioFormats = () => {
@@ -221,6 +261,17 @@ const fetchAudioFormats = () => {
     .catch((err) => {
       showMessage('error', `Audio Formats ${err.message}`);
     });
+}
+
+const fetchAudioTracks = () => {
+  state.audioTracks = [];
+  axiosHelper.get(`/audio/tracks/${state.record.id}`)
+      .then((response) => {
+        state.audioTracks = response.data;
+      })
+      .catch((err) => {
+        showMessage('error', `Audio Tracks ${err.message}`);
+      });
 }
 
 const handleDiscogs = () => {
@@ -291,7 +342,7 @@ const handleSubmit = (isFormValid) => {
             saveRecord();
           }
         })
-        .catch(() => {
+        .catch((err) => {
           showMessage('error', `Search ${err.message}`);
         });
   } else {
@@ -303,6 +354,7 @@ const saveRecord = () => {
   clearMessages();
 
   const newRec = state.record.id === null;
+  state.record.AudioTracks = state.audioTracks;
   axiosHelper.save('/audio', state.record)
       .then((response) => {
         state.record = response.data;
@@ -344,8 +396,6 @@ const handleReject = () => {
 const loadRecord = (data, from) => {
   const rec = state.record;
   rec.imageurl = data.imageurl;
-  rec.imagewidth = data.imagewidth;
-  rec.imageheight = data.imageheight;
   rec.runtime = data.runtime;
   rec.artists = data.artists;
   rec.genres = data.genres;
@@ -356,10 +406,19 @@ const loadRecord = (data, from) => {
   rec.year = data.year;
   if(from === 'discogs') {
     rec.title = data.title;
+    const hasArtist = rec.artists.length > 0;
+    if(hasArtist) {
+      rec.sortname = `${rec.artists[0]} : ${rec.title}`;
+    } else {
+      rec.sortname = rec.title;
+    }
+    state.audioTracks = data.AudioTracks;
   } else {
     rec.id = data.id;
     rec.title = data.title.replaceAll('&#39;', '\'');
+    rec.sortname = data.sortname;
     rec.audioformatid = data.audioformatid;
+    fetchAudioTracks();
   }
 }
 
