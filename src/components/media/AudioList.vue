@@ -1,6 +1,6 @@
 <template>
 	<div class="card">
-		<h5>Video List</h5>
+		<h5>Audio List</h5>
 
     <transition-group name="p-message" tag="div">
       <Message v-for="msg of messages" :severity="msg.severity" :key="msg.id"
@@ -8,10 +8,10 @@
     </transition-group>
     <Toast />
 
-    <DataTable ref="dt" :value="state.videos" class="p-datatable-small p-datatable-gridlines" tableStyle="min-width: 50rem"
+    <DataTable ref="dt" :value="state.audios" class="p-datatable-small p-datatable-gridlines" tableStyle="min-width: 50rem"
                :paginator="true" :rows="20" dataKey="id" :rowHover="true" removableSort editMode="row"
                v-model:filters="filters" filterDisplay="menu"
-               :globalFilterFields="['title', 'VideoFormat.name', 'directors', 'genres', 'actors']"
+               :globalFilterFields="['title', 'AudioFormat.name', 'directors', 'genres', 'actors']"
                v-model:expandedRows="expandedRows" @rowExpand="onRowExpand" @rowCollapse="onRowCollapse"
     >
       <template #header>
@@ -27,6 +27,14 @@
       </template>
       <Column expander style="width: 2rem" />
       <Column field="id" header="ID" sortable/>
+      <Column field="sortname" header="Sort Name" sortable>
+        <template #body="{ data }">
+          {{ data.sortname }}
+        </template>
+        <template #filter="{ filterModel, filterCallback }">
+          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by sort name" />
+        </template>
+      </Column>
       <Column field="title" header="Title" sortable>
         <template #body="{ data }">
           {{ data.title }}
@@ -35,23 +43,15 @@
           <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by title" />
         </template>
       </Column>
-      <Column field="VideoFormat.name" header="Format"
-              :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem" sortable>
+      <Column field="AudioFormat.name" header="Format"
+              :filterMenuStyle="{ width: '4rem' }" style="min-width: 4rem" sortable>
         <template #body="{ data }">
-          {{ data.VideoFormat.name }}
+          {{ data.AudioFormat.name }}
         </template>
         <template #filter="{ filterModel }">
-          <Dropdown v-model="filterModel.value" :options="state.videoformats" optionLabel="name" optionValue="name"
+          <Dropdown v-model="filterModel.value" :options="state.audioformats" optionLabel="name" optionValue="name"
                     placeholder="Select One" class="p-column-filter" showClear>
           </Dropdown>
-        </template>
-      </Column>
-      <Column field="directors" header="Directors">
-        <template #body="{data}">
-          {{makeStr(data.directors)}}
-        </template>
-        <template #filter="{ filterModel, filterCallback }">
-          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
         </template>
       </Column>
       <Column field="genres" header="Genres">
@@ -62,12 +62,12 @@
           <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
         </template>
       </Column>
-      <Column field="actors" header="Actors">
+      <Column field="artists" header="Artists">
         <template #body="{data}">
-          {{makeStr(data.actors)}}
+          {{makeStr(data.artists)}}
         </template>
         <template #filter="{ filterModel, filterCallback }">
-          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by genre" />
+          <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="p-column-filter" placeholder="Search by Artist" />
         </template>
       </Column>
       <Column headerStyle="min-width:2rem;" bodyStyle="text-align:center">
@@ -98,30 +98,10 @@ import { useMessages } from "../../modules/common/Messages";
 import AxiosHelper from '../../modules/axiosHelper';
 import _ from 'lodash';
 
-const EDIT_PATH = '/videomaint';
+const EDIT_PATH = '/audiomaint';
 const editRecordStore = useEditRecordStore();
 
 const axiosHelper = new AxiosHelper();
-const emptyListDlg = {
-  visible: false,
-  selected: null,
-  records: [],
-  error: false
-}
-const emptyRecord = {
-  id: null,
-  imdbid: '',
-  title: '',
-  imageurl: null,
-  imagewidth: null,
-  imageheight: null,
-  runtime: null,
-  genres: [],
-  plot: '',
-  actors: [],
-  directors: [],
-  videoformatid: null
-};
 const { messages, clearMessages, showMessage } = useMessages();
 const toast = useToast();
 const filters = ref();
@@ -129,10 +109,8 @@ const expandedRows = ref([]);
 const dt = ref();
 
 const state = reactive({
-  record: _.cloneDeep(emptyRecord),
-  videoformats: [],
-  listDlg: _.cloneDeep(emptyListDlg),
-  videos: [],
+  audioformats: [],
+  audios: [],
   router: useRouter(),
 });
 
@@ -141,21 +119,19 @@ const rules = {
     imdbid: { },
     title: { required },
     runtime: { },
-    videoformatid: { required }
+    audioformatid: { required }
   }
 };
 const v$ = useVuelidate(rules, state);
 
 onMounted(() => {
-  fetchVideoFormats();
-  fetchVideos();
+  fetchAudioFormats();
+  fetchAudios();
 });
 
 const clear = () => {
   clearMessages();
-  state.record = _.cloneDeep(emptyRecord);
-  state.listDlg = _.cloneDeep(emptyListDlg);
-  state.videos = [];
+  state.audios = [];
 }
 const onRowExpand = (e) => {
   _.remove(expandedRows.value, it => it.id !== e.data.id );
@@ -166,62 +142,43 @@ const makeStr = (arr) => {
   return arr ? arr.toString() : null;
 }
 
-const fetchVideoFormats = () => {
-  state.videoformats = [];
-  axiosHelper.get('/video/formats')
+const fetchAudioFormats = () => {
+  state.audioformats = [];
+  axiosHelper.get('/audio/formats')
       .then((response) => {
-        state.videoformats = response.data;
+        state.audioformats = response.data;
       })
       .catch((err) => {
-        showMessage('error', `Video Formats ${err.message}`);
+        showMessage('error', `Audio Formats ${err.message}`);
       });
 }
 
-const fetchVideos = () => {
-  state.videos = [];
-  axiosHelper.get('/video')
+const fetchAudios = () => {
+  state.audios = [];
+  axiosHelper.get('/audio')
     .then((response) => {
-      state.videos = response.data;
-      _.forEach(state.videos, it => it.title = it.title.replaceAll('&#39;', '\'').trim());
-      state.videos = _.sortBy(state.videos, ['title']);
+      state.audios = response.data;
+      _.forEach(state.audios, it => it.title = it.title.replaceAll('&#39;', '\'').trim());
+      state.audios = _.sortBy(state.audios, ['sortname']);
     })
     .catch((err) => {
-      showMessage('error', `Videos ${err.message}`);
+      showMessage('error', `Audios ${err.message}`);
     });
 }
 
 const handleEdit = (itm) => {
   editRecordStore.create(EDIT_PATH, itm);
-  state.router.push('/videomaint');
-}
-
-const saveRecord = () => {
-  clearMessages();
-
-  const newRec = state.record.id === null;
-  axiosHelper.save('/video', state.record)
-      .then((response) => {
-        state.record = response.data;
-        clear();
-        if(newRec) {
-          showMessage('success', 'Video created.', false);
-        } else {
-          showMessage('success', 'Video updated.', false);
-        }
-      })
-      .catch(() => {
-        showMessage('error', 'Save failed.')
-      });
+  state.router.push(EDIT_PATH);
 }
 
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    sortname: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
     title: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    'VideoFormat.name': { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-    directors: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+    'AudioFormat.name': { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
     genres: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
-    actors: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] }
+    artists: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] }
   };
   expandedRows.value = [];
 };

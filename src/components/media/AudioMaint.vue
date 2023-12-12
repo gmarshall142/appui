@@ -44,7 +44,6 @@
         <div class="field col-12 md:col-1" />
         <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.id }}</div>
         <!-- Discogs Query: Catalog no. / Refresh Button / Bar code -->
-        <div class="field col-12 md:col-3" />
         <div class="field col-12 md:col-1"><b>Discogs</b></div>
         <div class="field col-12 md:col-2">
           <span class="p-float-label">
@@ -53,10 +52,6 @@
             <label for="catno" :class="{'p-error':v$.record.catno.$invalid && submitted}">Catalog Number</label>
           </span>
         </div>
-        <div class="field col-12 md:col-1">
-          <Button type="button" label="Refresh" :disabled="refreshDisabled"
-                  class="p-button-sm p-button-secondary" @click="handleDiscogs"/>
-        </div>
         <div class="field col-12 md:col-2">
           <span class="p-float-label">
             <InputText type="text" id="barcode" v-model="state.record.barcode"
@@ -64,8 +59,24 @@
             <label for="barcode" :class="{'p-error':v$.record.barcode.$invalid && submitted}">Bar Code</label>
           </span>
         </div>
-        <div class="field col-12 md:col-2" />
-        <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.masterid }}</div>
+        <div class="field col-12 md:col-2">
+          <span class="p-float-label">
+            <InputText type="text" id="searchArtist" v-model="state.searchArtist"/>
+            <label for="searchArtist">Artist</label>
+          </span>
+        </div>
+        <div class="field col-12 md:col-2">
+          <span class="p-float-label">
+            <InputText type="text" id="searchTitle" v-model="state.searchTitle"/>
+            <label for="searchTitle">Title</label>
+          </span>
+        </div>
+        <div class="field col-12 md:col-1">
+          <Button type="button" label="Refresh" :disabled="refreshDisabled"
+                  class="p-button-sm p-button-secondary" @click="handleDiscogs"/>
+        </div>
+        <div class="field col-12 md:col-1" />
+        <div class="field col-12 md:col-1">ID:&nbsp;&nbsp;{{ state.record.discogsid }}</div>
         <!-- Notes -->
         <div class="field col-12 md:col-10">
           <span class="p-float-label">
@@ -94,13 +105,15 @@
               <label for="genres">Genres</label>
             </span>
           </div>
-          <div class="field col-12 md:col-12">
-          <span class="p-float-label">
-            <InputText type="text" id="sortname" v-model="state.record.sortname"
-                       :class="{'p-invalid':v$.record.sortname.$invalid && submitted}" />
-            <label for="sortname" :class="{'p-error':v$.record.sortname.$invalid && submitted}">Sort Name</label>
-          </span>
-          </div>
+
+            <div class="field col-12 md:col-12">
+              <span class="p-float-label p-input-icon-right">
+                <i class="pi pi-refresh" @click="handleSort"/>
+                <InputText type="text" id="sortname" v-model="state.record.sortname"
+                           :class="{'p-invalid':v$.record.sortname.$invalid && submitted}" />
+                <label for="sortname" :class="{'p-error':v$.record.sortname.$invalid && submitted}">Sort Name</label>
+              </span>
+              </div>
         </div>
         <!-- Thumbnail -->
         <div class="field col-12 md:col-6">
@@ -115,22 +128,6 @@
       <Button type="button" label="Delete" :disabled="state.record.id === null" class="button-bar p-button-sm p-button-danger" @click="confirmDeleteDlg"/>
     </form>
   </div>
-<!--  <div class="card" v-if="displayImage">-->
-<!--    <h5>Discogs Image</h5>-->
-<!--    <div class="grid p-fluid mt-3">-->
-<!--      <div class="field col-12 md:col-7">-->
-<!--        <div class="field col-12 md:col-12" style="overflow-wrap: anywhere"><b>URL:</b>&nbsp;&nbsp;{{ state.record.imageurl }}</div>-->
-<!--        <div class="field col-12 md:col-1"><b>Width:</b>&nbsp;&nbsp;{{ state.record.imagewidth }}</div>-->
-<!--        <div class="field col-12 md:col-1"><b>Height:</b>&nbsp;&nbsp;{{ state.record.imageheight }}</div>-->
-<!--      </div>-->
-<!--      <div class="field col-12 md:col-5">-->
-<!--        <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;"-->
-<!--             :src="state.record.imageurl"-->
-<!--             :width="imageWidth"-->
-<!--             :height="imageHeight" alt="" />-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
   <div class="card" v-if="displayTracks">
     <h5>Tracks</h5>
     <DataTable ref="dt" :value="state.audioTracks" class="p-datatable-small p-datatable-gridlines"
@@ -173,6 +170,7 @@ const emptyListDlg = {
 const emptyRecord = {
   id: null,
   title: '',
+  discogsid: null,
   sortname: '',
   catno: '',
   barcode: '',
@@ -190,7 +188,10 @@ const state = reactive({
   record: _.cloneDeep(emptyRecord),
   audioformats: [],
   listDlg: _.cloneDeep(emptyListDlg),
-  audioTracks: []
+  audioTracks: [],
+  searchArtist: '',
+  searchTitle: '',
+  lastFormat: null
 });
 
 const rules = {
@@ -220,31 +221,21 @@ const clear = () => {
   state.record = _.cloneDeep(emptyRecord);
   state.listDlg = _.cloneDeep(emptyListDlg);
   state.audioTracks = [];
+  state.searchArtist = '';
+  state.searchTitle = ''
+  state.record.audioformatid = state.lastFormat;
 }
 
-// const imageWidth = computed(() => {
-//   return state.record.imagewidth === 0 ? "" : state.record.imagewidth * getImageMod();
-// })
-//
-// const imageHeight = computed(() => {
-//   return state.record.imageheight === 0 ? "" : state.record.imageheight * getImageMod();
-// })
-
 const refreshDisabled = computed(() => {
-  return state.record.catno === '' && state.record.barcode === '';
+  return state.record.catno === ''
+      && state.record.barcode === ''
+      && state.searchArtist === ''
+      && state.searchTitle === '';
 })
-
-// const displayImage = computed(() => {
-//   return state.record.imageurl != null;
-// })
 
 const displayTracks = computed(() => {
   return state.audioTracks != null && state.audioTracks.length > 0;
 })
-
-const getImageMod = () => {
-  return 600 / state.record.imageheight;
-}
 
 const durationDisplay = (time) => {
   const minutes = Math.floor(time / 60);
@@ -275,18 +266,32 @@ const fetchAudioTracks = () => {
 }
 
 const handleDiscogs = () => {
-  let searchStr;
+  let searchStr = '';
+  let isFirst = true;
   if(state.record.catno !== '') {
-    searchStr = `catno=${state.record.catno}`;
-  } else if(state.record.barcode !== '') {
-    searchStr = `barcode=${state.record.barcode}`;
+    searchStr += `catno=${state.record.catno}`;
+    isFirst = false;
+  }
+  if(state.record.barcode !== '') {
+    if(!isFirst) searchStr += '&';
+    searchStr += `barcode=${state.record.barcode}`;
+    isFirst = false;
+  }
+  if(state.searchArtist !== '') {
+    if(!isFirst) searchStr += '&';
+    searchStr += `artist=${state.searchArtist}`;
+    isFirst = false;
+  }
+  if(state.searchTitle !== '') {
+    if(!isFirst) searchStr += '&';
+    searchStr += `title=${state.searchTitle}`;
   }
   axiosHelper.get(`/audio/discogs?${searchStr}`)
     .then((response) => {
       loadRecord(response.data, "discogs");
     })
     .catch((err) => {
-      showMessage('error', `IMDB fetch ${err.message}`);
+      showMessage('error', `Discogs fetch ${err.message}`);
     });
 }
 
@@ -322,6 +327,25 @@ const handleBtnClick = () => {
   }
 }
 
+const handleSort = () => {
+  if(state.record.sortname === '') return;
+
+  let arr = state.record.sortname.split(":");
+  if(arr[0].includes(",")) {
+    const arr2 = arr[0].split(',');
+    if(arr2.length > 1) {
+      const arr3 = arr2[1].split(' ');
+      arr[0] = `${arr3[1].trim()} ${arr2[0]} ${_.join(_.slice(arr3, 2), ' ')}`;
+    }
+  } else {
+    const arr2 = arr[0].split(' ');
+    if(arr2.length > 1) {
+      arr[0] = `${arr2[1]}, ${arr2[0]} ${_.join(_.slice(arr2, 2), ' ')}`;
+    }
+  }
+  state.record.sortname = _.join(arr, ':');
+}
+
 const handleSubmit = (isFormValid) => {
   submitted.value = true;
 
@@ -355,6 +379,7 @@ const saveRecord = () => {
 
   const newRec = state.record.id === null;
   state.record.AudioTracks = state.audioTracks;
+  state.lastFormat = state.record.audioformatid;
   axiosHelper.save('/audio', state.record)
       .then((response) => {
         state.record = response.data;
@@ -402,7 +427,7 @@ const loadRecord = (data, from) => {
   rec.notes = data.notes;
   rec.catno = data.catno;
   rec.barcode = data.barcode;
-  rec.masterid = data.masterid;
+  rec.discogsid = data.discogsid;
   rec.year = data.year;
   if(from === 'discogs') {
     rec.title = data.title;

@@ -54,7 +54,9 @@
         <div class="field col-12 md:col-1">
           <Button type="button" label="Refresh" class="p-button-sm p-button-secondary" @click="handleImdb"/>
         </div>
-        <div class="field col-12 md:col-4" />
+        <div class="field col-12 md:col-4">
+          <a href="https://www.imdb.com/?ref_=nv_home" target="_blank">IMDB Page</a>
+        </div>
         <div class="field col-12 md:col-1">Runtime</div>
         <div class="field col-12 md:col-2">
           <span class="p-float-label">

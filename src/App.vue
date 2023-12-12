@@ -69,7 +69,7 @@ const menu = [
     label: 'Media',
     items: [
       { label: 'Audio Maintenance', icon: 'fa-solid fa-record-vinyl', to: '/audiomaint' },
-      { label: 'Audio List', icon: 'fa-solid fa-music', to: '/videolist' },
+      { label: 'Audio List', icon: 'fa-solid fa-music', to: '/audiolist' },
       { label: 'Video Maintenance', icon: 'fa-solid fa-video', to: '/videomaint' },
       { label: 'Video List', icon: 'fa-solid fa-film', to: '/videolist' }
     ]
